@@ -1,6 +1,8 @@
 import path from "path";
 import { log, types } from "vortex-api";
 import UnrealGameHelper from "vortex-ext-common";
+import { VortexCommands } from "./VortexCommands";
+import { VortexEvents } from "./VortexEvents";
 
 // Nexus Mods domain for the game. e.g. nexusmods.com/bloodstainedritualofthenight
 const GAME_ID: string = "hogwartslegacy";
@@ -14,7 +16,14 @@ const EXECUTABLE_FILENAME: string = "HogwartsLegacy.exe";
 // path to folder that is relative to game root "/Path/To/Mods"
 const RELATIVE_MODSFOLDER_PATH = path.join("Game", "Content", "Paks", "~mods");
 
+let vortexCommands: VortexCommands;
+let vortexEvents: VortexEvents;
+
 function main(context: types.IExtensionContext) {
+  // event and command stuff
+  vortexCommands = new VortexCommands(context.api);
+  vortexEvents = new VortexEvents(context.api);
+
   /*
   context.registerAction('global-icons', 100, 'menu', {}, 'Sample', () => {
     context.api.showDialog('info', 'Success!', {
@@ -47,6 +56,10 @@ function main(context: types.IExtensionContext) {
   context.once(() => {
     log("debug", "initialising your new extension!");
   });
+
+  vortexEvents.onGameModeActivated.subscribe(() =>
+    console.log("onGameModeActivated")
+  );
 
   return true;
 }

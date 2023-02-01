@@ -1,0 +1,37 @@
+{
+  "name": "hogwartslegacy",
+  "version": "0.0.1",
+  "description": "Vortex Extension for Hogwarts Legacy",
+  "author": "insomnious",
+  "private": true,
+  "main": "./dist/index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prettier-format": "prettier --config .prettierrc src/**/*.ts --write",
+    "build": "npx tsc",
+    "buildandcopyplugin": "npx tsc && node copyplugin.js",
+    "copyplugin": "node copyplugin.js"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/react": "^18.0.27",
+    "@typescript-eslint/eslint-plugin": "^5.50.0",
+    "@typescript-eslint/parser": "^5.50.0",
+    "bluebird": "^3.7.2",
+    "eslint": "^8.33.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "prettier": "^2.8.3",
+    "react": "^18.2.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5",
+    "vortex-api": "Nexus-Mods/vortex-api",
+    "vortex-ext-common": "^0.4.0"
+  }
+}

@@ -1,28 +1,48 @@
 import path from "path";
-import { log, types } from "vortex-api";
+import { fs, log, selectors, types, util } from "vortex-api";
+import { IDialogResult } from "vortex-api/lib/actions";
+import {
+  IExtensionApi,
+  IExtensionContext,
+  IInstruction,
+  ISupportedResult
+} from "vortex-api/lib/types/IExtensionContext";
+import { IGame } from "vortex-api/lib/types/IGame";
+import { IGameStoreEntry } from "vortex-api/lib/types/IGameStoreEntry";
+import { IDiscoveryResult, IState } from "vortex-api/lib/types/IState";
 import UnrealGameHelper from "vortex-ext-common";
 import { VortexCommands } from "./VortexCommands";
 import { VortexEvents } from "./VortexEvents";
 
-// Nexus Mods domain for the game. e.g. nexusmods.com/bloodstainedritualofthenight
-const GAME_ID: string = "hogwartslegacy";
+// IDs for different stores and nexus
+const EPIC_ID = "TBC";
+const STEAM_ID = "990080";
+const NEXUS_ID = "hogwartslegacy";
 
-//Steam Application ID, you can get this from https://steamdb.info/apps/
-const STEAMAPP_ID: string = "990080";
+const EXECUTABLE: string = "HogwartsLegacy.exe"; // path to executable, relative to game root
+const MODSFOLDER_PATH = path.join("Game", "Content", "Paks", "~mods"); // relative to game root
 
-// filename of main executable
-const EXECUTABLE_FILENAME: string = "HogwartsLegacy.exe";
-
-// path to folder that is relative to game root "/Path/To/Mods"
-const RELATIVE_MODSFOLDER_PATH = path.join("Game", "Content", "Paks", "~mods");
+// important that will be updated in main once function
+let CONTEXT: IExtensionContext;
 
 let vortexCommands: VortexCommands;
 let vortexEvents: VortexEvents;
 
 function main(context: types.IExtensionContext) {
-  // event and command stuff
-  vortexCommands = new VortexCommands(context.api);
-  vortexEvents = new VortexEvents(context.api);
+  context.once(() => {
+    // event and command references
+    vortexCommands = new VortexCommands(context.api);
+    vortexEvents = new VortexEvents(context.api);
+
+    console.log("initialising the hogwarts extension! context.once()");
+
+    // subscribe to events
+    vortexEvents.onGameModeActivated.subscribe((api, gameMode) => {
+      console.log("hogwarts onGameModeActivated()");
+      console.log(api);
+      console.log(gameMode);
+    });
+  });
 
   /*
   context.registerAction('global-icons', 100, 'menu', {}, 'Sample', () => {
@@ -35,31 +55,25 @@ function main(context: types.IExtensionContext) {
 
   // register a whole game, basic metadata and folder paths
   context.registerGame({
-    id: GAME_ID,
+    id: NEXUS_ID,
     name: "Hogwarts Legacy",
     mergeMods: true,
     queryPath: undefined,
     supportedTools: [],
-    queryModPath: () => RELATIVE_MODSFOLDER_PATH,
+    queryModPath: () => MODSFOLDER_PATH,
     logo: "gameart.jpg",
-    executable: () => EXECUTABLE_FILENAME,
-    requiredFiles: [EXECUTABLE_FILENAME],
+    executable: () => EXECUTABLE,
+    requiredFiles: [EXECUTABLE],
     setup: undefined,
     environment: {
-      SteamAppId: STEAMAPP_ID
+      ["SteamAppId"]: STEAM_ID,
+      ["EpicAppId"]: EPIC_ID
     },
     details: {
-      SteamAppId: STEAMAPP_ID
+      ["SteamAppId"]: STEAM_ID,
+      ["EpicAppId"]: EPIC_ID
     }
   });
-
-  context.once(() => {
-    log("debug", "initialising your new extension!");
-  });
-
-  vortexEvents.onGameModeActivated.subscribe(() =>
-    console.log("onGameModeActivated")
-  );
 
   return true;
 }

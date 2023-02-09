@@ -85,7 +85,7 @@ function main(context: types.IExtensionContext) {
       ["EpicAppId"]: EPIC_ID
     },
     details: {
-      ["SteamAppId"]: STEAM_ID,
+      ["SteamAppId"]: parseInt(STEAM_ID, 10),
       ["EpicAppId"]: EPIC_ID,
       stopPatterns: ["[^/]*\\.pak$"]
     }

@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const VORTEX_PLUGINS = path.join(process.env.APPDATA, "Vortex", "Plugins");
 
-console.log("__dirname=" + __dirname);
-console.log("__filename=" + __filename);
+//console.log("__dirname=" + __dirname);
+//console.log("__filename=" + __filename);
 
 async function removeOldPlugins(name) {
   const entries = await (

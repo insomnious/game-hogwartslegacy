@@ -88,7 +88,8 @@ function main(context: types.IExtensionContext) {
       ["SteamAppId"]: parseInt(STEAM_ID, 10),
       ["EpicAppId"]: EPIC_ID,
       stopPatterns: ["[^/]*\\.pak$"]
-    }
+    },
+    requiresLauncher: requiresLauncher
   });
 
   return true;
@@ -104,6 +105,31 @@ async function setup(discovery: IDiscoveryResult) {
   } catch (error) {
     return Promise.reject(error);
   }
+}
+
+async function requiresLauncher(gamePath: string, store?: string) {
+  console.log(`requiresLauncher ${gamePath} ${store} {}`);
+
+  if (store === "steam") {
+    return Promise.resolve({
+      launcher: "steam",
+      addInfo: {
+        appId: STEAM_ID,
+        parameters: [],
+        launchType: "gamestore"
+      }
+    });
+  } else if (store === "epic") {
+    return Promise.resolve({
+      launcher: "epic",
+      addInfo: {
+        appId: EPIC_ID
+      }
+    });
+  }
+
+  // return a void promise if nothing else
+  return Promise.resolve();
 }
 
 async function findGame() {

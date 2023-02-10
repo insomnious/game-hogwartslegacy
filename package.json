@@ -1,8 +1,8 @@
 {
   "name": "hogwartslegacy",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "description": "Vortex Extension for Hogwarts Legacy",
-  "author": "insomnious",
+  "author": "lordvoldem0rt",
   "private": true,
   "main": "./dist/index.ts",
   "type": "module",
@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "prettier-format": "prettier --config .prettierrc src/**/*.ts --write",
     "build": "npx webpack",
-    "buildandcopyplugin": "npx webpack && node copyplugin.js",
+    "buildandcopyplugin": "npx webpack && node createinfojson.js && node copyplugin.js",
     "copyplugin": "node copyplugin.js"
   },
   "keywords": [],

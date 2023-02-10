@@ -15,8 +15,7 @@
     "buildandcopyplugin": "npx webpack && node createinfojson.js && node copyplugin.js",
     "copyplugin": "node copyplugin.js"
   },
-  "keywords": [],
-  "license": "ISC",
+  "license": "GPLV3",
   "devDependencies": {
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.27",

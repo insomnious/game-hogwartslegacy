@@ -26,6 +26,8 @@ async function start() {
       description: packageJson.description
     });
 
+    console.log(infojson);
+
     // create json.info
     await fs.writeFile(path.join(distFolder, "info.json"), infojson, {
       encoding: "utf8"

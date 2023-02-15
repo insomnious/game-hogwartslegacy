@@ -5,10 +5,19 @@ This is an extension for [Vortex](https://www.nexusmods.com/about/vortex/) to ad
 # Features
 
 - Support for PAK-based mods
+- Support for load order
 - Automatic game detection
 <!-- - Installation of archives which include more than one mod.
 - Automatic detection of ModBuddy (the XCOM 2 modding toolkit).
   Load order management (including Steam Workshop entires) -->
+
+# Installation
+
+This extension requires Vortex >= 1.7.5. To install, click the Vortex button at the top of the page to open this extension within Vortex, and then click Install.
+
+You can also manually install it by downloading the main file and dragging it into the 'drop zone' labelled Drop File(s) in the Extensions tab at the bottom right.
+
+Afterwards, restart Vortex and you can begin installing supported Hogwarts Legacy mods with Vortex.
 
 # Game detection
 
@@ -24,7 +33,11 @@ If your game lacks these files/folders then it is likely that your installation 
 
 # Mod Management
 
-Vortex will deploy files to the game's mod folder (`/Phoenix/Content/Paks/~mods`) and extracts all nested files in the archive to this folder, ignoring archive folder structure. Any files that are overwritten are backed up for when the mod is disabled or removed.
+Vortex will deploy files to the game's mod folder (`/Phoenix/Content/Paks/~mods`) and extracts all nested files in the archive to their own individual within this one, ignoring archive folder structure. Each mod folder will be prefixed based on the users load order set within Vortex. Any files that are overwritten are backed up for when the mod is disabled or removed.
+
+# Load Order
+
+The load order of mods can now be set within Vortex to allow greater control over what mods are loaded before other mods. This is important so as multiple mods can change the same thing and so load order can be used to minimize collisions. Mods loaded last will have priority over mods loaded first.
 
 <!--Individual mod entries can be enabled/disabled from the load order section.
 
@@ -46,3 +59,34 @@ The load order section will also detect mods installed from the Steam Workshop a
 - [Mods for Hogwarts Legacy (Nexus Mods)](https://www.nexusmods.com/hogwartslegacy)
 - [Download Vortex (Nexus Mods)](https://www.nexusmods.com/about/vortex/)
 - [Vortex Knowledge Base (Nexus Mods)](https://wiki.nexusmods.com/index.php/Category:Vortex)
+
+# Changelog
+
+All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [Unreleased] - yyyy-mm-dd
+
+To be announced
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.1.1] - 2023-02-15
+
+Load order added so that mods can be rearranged without the need to disable them completely. Migration to this version will happen automatically my purging the `/~mods` folder and redeploying the mods.
+
+### Added
+
+- Load Order has been added for mods.
+
+### Changed
+
+- Mods are now deployed into individual folders inside of the games `/~mods` folder
+- Symlink deployment method has been disabled due to visual mods not working 100% of the time when it's used.
+
+## [0.0.1] - 2023-02-09
+
+Initial release for basic mod support

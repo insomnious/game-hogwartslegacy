@@ -74,6 +74,14 @@ To be announced
 
 ### Fixed
 
+## [0.1.2] - 2023-02-16
+
+Bug fixes
+
+### Changed
+
+- Fixed migration bug when it was the first time the extension was installed
+
 ## [0.1.1] - 2023-02-15
 
 Load order added so that mods can be rearranged without the need to disable them completely. Migration to this version will happen automatically my purging the `/~mods` folder and redeploying the mods.

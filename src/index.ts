@@ -122,14 +122,28 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
   //context.api  (`HOGWARTS: Migrate oldVersion=${oldVersion}`);
 
   // if old version is newer than or equal to this version, then we just ignore
-  if (semver.gte(oldVersion, "0.1.1")) {
+  if (semver.gte(oldVersion, "0.1.2")) {
+    log("info", "No need to migrate");
     return Promise.resolve();
   }
 
-  // get all the main vortex properties
-  const props: IProps = GetVortexProperties(context);
+  const state = context.api.getState();
+  const discoveryPath = util.getSafe(state, ["settings", "gameMode", "discovered", NEXUS_ID, "path"], undefined);
+  const activatorId = selectors.activatorForGame(state, NEXUS_ID);
+  const activator = util.getActivator(activatorId);
 
-  const modsPath = path.join(props.discovery.path, MODSFOLDER_PATH);
+  if (discoveryPath === undefined || activator === undefined) {
+    log("warn", "discoveryPath or activator are undefined");
+    return Promise.resolve();
+  }
+
+  const mods: { [modId: string]: types.IMod } = util.getSafe(state, ["persistent", "mods", NEXUS_ID], {});
+  if (Object.keys(mods).length === 0) {
+    log("warn", "mods length is 0");
+    return Promise.resolve();
+  }
+
+  const modsPath = path.join(discoveryPath, MODSFOLDER_PATH);
 
   log("info", `modsPath=${modsPath}`);
 

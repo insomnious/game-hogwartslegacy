@@ -14,6 +14,14 @@ To be announced
 
 ### Fixed
 
+## [0.2.0] - 2023-02-21
+
+Supporting mods that replace movie files in the `Phoenix/Content/Movies` folder. Setting load order is currently only enabled for regular `.pak` file mods.
+
+### Added
+
+- Support for mods that replace the `.bk2` movies like those in picture frames and newspapers. Folder structure of the archive doesn't matter as the files to replace are searched for based on what is in the mod. This allows us not to have to set a strict mod format however it does rely on the files being in the game already to replace, any `bk2` files not found to replace are just ignored.
+
 ## [0.1.2] - 2023-02-16
 
 Bug fixes

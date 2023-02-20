@@ -22,7 +22,9 @@ const NEXUS_ID = "hogwartslegacy";
 const LOADORDER_FILE = "loadOrder.json";
 const EXECUTABLE = "HogwartsLegacy.exe"; // path to executable, relative to game root
 const MODSFOLDER_PATH = path.join("Phoenix", "Content", "Paks", "~mods"); // relative to game root
+const MOVIESFOLDER_PATH = path.join("Phoenix", "Content", "Movies"); // relative to game root
 const VERSION_PATH = path.join("Phoenix", "Content", "Data", "Version", "DA_Version.txt"); // relative to game root
+const MOVIES_EXTENSION = ".bk2";
 
 // important that will be updated in main once function
 let CONTEXT: IExtensionContext;
@@ -102,13 +104,166 @@ function main(context: types.IExtensionContext) {
     deserializeLoadOrder: async () => await DeserializeLoadOrder(context),
     serializeLoadOrder: async (loadOrder, previousLoadOrder) => await SerializeLoadOrder(context, loadOrder, previousLoadOrder),
     toggleableEntries: false,
-    usageInstructions:
-      "Re-position entries by draging and dropping them - note that the mod further down the list will be loaded last and win any conflicts."
+    usageInstructions: `Re-position entries by draging and dropping them - note that the mod further down the list will be loaded last and win any conflicts. Mods that replace the .bk2 video files located in ${MOVIESFOLDER_PATH} won't show up in this list.`
   });
 
   context.registerMigration((oldVer) => Migrate(context, oldVer));
 
+  context.registerModType(
+    "hogwarts-modtype-movies",
+    95,
+    (gameId) => gameId === NEXUS_ID,
+    (game) => GetMoviesFolderPath(context, game),
+    () => false
+  );
+
+  context.registerInstaller("hogwarts-installer-movies", 90, TestForMoviesMod, (files) => InstallMoviesMod(files, context));
+
   return true;
+}
+
+function GetMoviesFolderPath(context: IExtensionContext, game: IGame): string {
+  const state: IState = context.api.getState();
+  const gamePath: string = state.settings.gameMode.discovered?.[game.id]?.path;
+
+  //console.log(`HOGWARTS: GetMovieFolderPath() ${path.join(gamePath, MOVIESFOLDER_PATH)}`);
+
+  if (gamePath != undefined) return path.join(gamePath, MOVIESFOLDER_PATH);
+  else return undefined;
+}
+
+async function TestForMoviesMod(files: string[], gameId: string): Promise<ISupportedResult> {
+  // Make sure we're able to support this mod.
+
+  // make sure the archive is for this game and contains at least 1 movie file
+  const supported = gameId == NEXUS_ID && files.find((file) => path.extname(file).toLowerCase() == MOVIES_EXTENSION.toLowerCase()) != undefined;
+
+  console.log(`HOGWARTS: TestForMoviesMod() supported=${supported}`);
+
+  //console.log("does modinfo exist? " + (files.find((file) => path.basename(file).toLowerCase() == MODINFO_FILENAME.toLowerCase()) != undefined));
+
+  //console.log(files);
+  //console.log(supported);
+
+  return Promise.resolve({
+    supported,
+    requiredFiles: []
+  });
+}
+
+async function InstallMoviesMod(files: string[], context: IExtensionContext) {
+  // can't type function return type as the return resolve needs to return an inline object
+
+  const state = context.api.getState();
+  const discovery = state.settings.gameMode?.discovered[NEXUS_ID];
+
+  console.log(discovery);
+  if (discovery == undefined) {
+    Promise.reject("discovery is undefined");
+  }
+
+  const gamePath = discovery.path;
+  const moviesPath = path.join(discovery.path, MOVIESFOLDER_PATH);
+
+  console.log(`HOGWARTS: InstallMoviesMod() gamePath=${gamePath} moviesPath=${moviesPath}`);
+
+  // Remove empty directories (if we don't, we get an error in Vortex as it can't process empty directories)
+  const filtered = files.filter((file) => !file.endsWith(path.sep));
+
+  /*
+   * We need to get5 a list of just the files and we also need to map them/find them, in the local /Movies folder so we can overwrite
+   * then we can find those files locally and build the instructions array to specific files
+   * i.e. we have 'ATL_Portrait_9_Music.bk2' and we need to find the path to put it i.e. 'Atlas/ATL_Portrait_9_Music.bk2'
+   */
+
+  // just movie files
+  const movies = filtered.filter((file) => path.extname(file) == MOVIES_EXTENSION);
+
+  console.log("HOGWARTS: InstallMoviesMod() movies=");
+  console.log(movies);
+
+  // we need to find where the originals are now kept to install. basically search through subfolders nested in /Movies and match file names
+
+  //if (props.discovery == undefined) {
+  // Promise.reject("discovery is undefined");
+  //}
+
+  const foundFiles: string[] = await GetFileList(moviesPath, moviesPath, true);
+
+  console.log("HOGWARTS: InstallMoviesMod() foundFiles=");
+  console.log(foundFiles);
+
+  //const matchedFiles = foundFiles.map((file) => path.basename(file));
+
+  // empty instructions array
+  let instructions: IInstruction[] = [];
+
+  // adds instruction to set a different mod type
+  instructions.push({ type: "setmodtype", value: "hogwarts-modtype-movies" });
+
+  // loop through and find matching movies to replace
+  for (const movieFile of movies) {
+    // compare filename of mod file to filename of original file
+    const foundFile: string = foundFiles.find((file) => path.basename(file).toLowerCase() == path.basename(movieFile).toLowerCase());
+
+    console.log(`HOGWARTS: InstallMoviesMod() Looking for ${path.basename(movieFile).toLowerCase()}... foundFile=${foundFile}`);
+
+    // if we have a found a matching original file, then add it as needing replacing in the instructions array
+    if (foundFile != undefined) {
+      instructions.push({
+        type: "copy",
+        source: movieFile,
+        destination: foundFile
+      });
+    }
+  }
+
+  console.log(`HOGWARTS: InstallMoviesMod() instructions=`);
+  console.log(instructions);
+
+  return Promise.resolve({ instructions });
+}
+
+async function GetFileList(folderPath: string, relativeTo?: string, recursive?: boolean): Promise<string[]> {
+  let files: string[] = [];
+  const items = await fs.readdirAsync(folderPath); // this array is list is relative to dirName, not absolute
+
+  //console.log(`HOGWARTS: GetFileList() folderPath=${folderPath} relativeTo=${relativeTo}`);
+  //console.log("HOGWARTS: GetFileList() items=");
+  //console.log(items);
+
+  // loop through items in directory and get items (will be files and/or folders))
+  for (const item of items) {
+    // need absoltue path so we can check if it's a folder or not
+    const absItemPath: string = path.join(folderPath, item);
+
+    // if it's a folder we need to recursively search again. if it's a file, then we can add to the returning array
+    if (await fs.isDirectoryAsync(absItemPath)) {
+      //console.log(`HOGWARTS: GetFileList() ${item} is a folder. Lets search inside of that`);
+
+      // if searching recursively, lets dig in deeper
+      if (recursive != undefined) {
+        const moreFiles = await GetFileList(absItemPath, relativeTo, recursive);
+        files = files.concat(moreFiles);
+      }
+    } else {
+      // if we've specified a relativeTo path, then lets try to remove the parts of the path we don't need
+      //console.log(`HOGWARTS: GetFileList() ${item} is a file. Lets add it`);
+      if (relativeTo != undefined && folderPath.indexOf(relativeTo) != -1) {
+        // we've matched a full path to make relative, so lets remove it and use that as our final path
+        const relativePath = folderPath.substring(folderPath.indexOf(relativeTo) + relativeTo.length);
+        files.push(path.join(relativePath, item));
+      } else {
+        // nothing matched or we don't need to check, add full absolute path
+        files.push(path.join(folderPath, item));
+      }
+    }
+  }
+
+  //console.log(`HOGWARTS: GetFileList() ${folderPath} files=`);
+  //console.log(files);
+
+  return Promise.resolve(files);
 }
 
 async function Migrate(context: IExtensionContext, oldVersion: string) {
@@ -117,9 +272,6 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
    */
 
   log("info", `Migrate oldVersion=${oldVersion}`);
-
-  console.log(`HOGWARTS: Migrate oldVersion=${oldVersion}`);
-  //context.api  (`HOGWARTS: Migrate oldVersion=${oldVersion}`);
 
   // if old version is newer than or equal to this version, then we just ignore
   if (semver.gte(oldVersion, "0.1.2")) {
@@ -166,7 +318,16 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
   //console.log(`HOGWARTS: Start MergeMods id=${mod.id}`);
 
   const props: IProps = GetVortexProperties(context);
+  //console.log(props);
+  //console.log(mod);
 
+  // check to see if this is a movies type, if so, we don't want an extra folder or a prefix added
+  // so we return nothing and let our installer sort it out
+  if (mod.type == "hogwarts-modtype-movies") {
+    return "";
+  }
+
+  // if props is undefined then we won't be able to check load order to get prefixes
   if (props == undefined) {
     return "ZZZZ-" + mod.id;
   }
@@ -183,7 +344,7 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
   //console.log("load order from application state");
   //console.log(util.getSafe(props.state, ["persistent", "loadOrder", props.profile.id], []));
 
-  console.log(`HOGWARTS: End MergeMods id=${mod.id} installationPath=${mod.installationPath} index=${index} prefix=${prefix}`);
+  //console.log(`HOGWARTS: End MergeMods id=${mod.id} installationPath=${mod.installationPath} index=${index} prefix=${prefix}`);
 
   // use prefix if it's found, if not, then use ZZZZ
   return prefix != undefined ? prefix + "-" + mod.id : "ZZZZ-" + mod.id;
@@ -194,14 +355,14 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
  * will trigger a serialization event which will ensure the data is written to the load order file.
  */
 async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<types.LoadOrder> {
-  console.log("HOGWARTS: DeserializeLoadOrder");
+  //console.log("HOGWARTS: DeserializeLoadOrder");
 
   // get all the main vortex properties
   const props: IProps = GetVortexProperties(context);
 
   // build path to load order file
   const loadOrderPath = path.join(VortexUtils.GetUserDataPath(), props.profile.gameId, props.profile.id + "_" + LOADORDER_FILE);
-  console.log(`loadOrderPath=${loadOrderPath}`);
+  //console.log(`loadOrderPath=${loadOrderPath}`);
 
   // get current state of the mods
   const currentModsState = util.getSafe(props.profile, ["modState"], {});
@@ -233,8 +394,11 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
   //  entries from the data we parsed.
   const filteredData = data.filter((entry) => enabledModIds.includes(entry.id));
 
-  // Check if the user added any new mods.
-  const newMods = enabledModIds.filter((id) => mods[id]?.type !== "collection" && filteredData.find((loEntry) => loEntry.id === id) === undefined);
+  // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
+  const newMods = enabledModIds.filter(
+    (id) =>
+      mods[id]?.type != "collection" && mods[id]?.type != "hogwarts-modtype-movies" && filteredData.find((loEntry) => loEntry.id === id) === undefined
+  );
 
   // Add any newly added mods to the bottom of the loadOrder.
   newMods.forEach((newMod) => {

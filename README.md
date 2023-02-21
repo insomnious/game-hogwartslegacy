@@ -5,6 +5,7 @@ This is an extension for [Vortex](https://www.nexusmods.com/about/vortex/) to ad
 # Features
 
 - Support for PAK-based mods
+- Support for BK2-based mods (movie files)
 - Support for load order
 - Automatic game detection
 <!-- - Installation of archives which include more than one mod.
@@ -18,6 +19,8 @@ This extension requires Vortex >= 1.7.5. To install, click the Vortex button at 
 You can also manually install it by downloading the main file and dragging it into the 'drop zone' labelled Drop File(s) in the Extensions tab at the bottom right.
 
 Afterwards, restart Vortex and you can begin installing supported Hogwarts Legacy mods with Vortex.
+
+If updating an extension, migration occurs that purges your mods folder and reinstalls any movie mods.
 
 # Game detection
 
@@ -34,6 +37,8 @@ If your game lacks these files/folders then it is likely that your installation 
 # Mod Management
 
 Vortex will deploy files to the game's mod folder (`/Phoenix/Content/Paks/~mods`) and extracts all nested files in the archive to their own individual within this one, ignoring archive folder structure. Each mod folder will be prefixed based on the users load order set within Vortex. Any files that are overwritten are backed up for when the mod is disabled or removed.
+
+This extension also supports mods that overwrite the games movie files, located within subfolders under `/Phoenix/Content/Movies`. When a mod is added that contains at least 1 `.bk2` file, the `hogwarts-modtype-movies` installer is used. This searches through the movies folder within the game and attempts to match anything that matches inside of the mod archive. If found, Vortex overwrites them (after backing up the originals) and if any `pak` files are also found within a movie mod, then these are processed the same as a pak-only mod.
 
 # Load Order
 
@@ -64,15 +69,17 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [0.2.3] - 2023-02-22
 
-To be announced
+Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive.
 
 ### Added
 
+- Support for mods that replace the `.bk2` movies like those in picture frames and newspapers. Folder structure of the archive doesn't matter as the files to replace are searched for based on what is in the mod. This allows us not to have to set a strict mod format however it does rely on the files being in the game already to replace, any `bk2` files not found to replace are just ignored. If a mod contains both movie files and `pak`/`utoc`/`ucas` files, this is also supported and works with load ordering.
+
 ### Changed
 
-### Fixed
+- Updated metadata to display the extension name correctly within Vortex
 
 ## [0.1.2] - 2023-02-16
 

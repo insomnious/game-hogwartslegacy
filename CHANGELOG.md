@@ -14,13 +14,17 @@ To be announced
 
 ### Fixed
 
-## [0.2.0] - 2023-02-21
+## [0.2.3] - 2023-02-22
 
-Supporting mods that replace movie files in the `Phoenix/Content/Movies` folder. Setting load order is currently only enabled for regular `.pak` file mods.
+Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive.
 
 ### Added
 
-- Support for mods that replace the `.bk2` movies like those in picture frames and newspapers. Folder structure of the archive doesn't matter as the files to replace are searched for based on what is in the mod. This allows us not to have to set a strict mod format however it does rely on the files being in the game already to replace, any `bk2` files not found to replace are just ignored.
+- Support for mods that replace the `.bk2` movies like those in picture frames and newspapers. Folder structure of the archive doesn't matter as the files to replace are searched for based on what is in the mod. This allows us not to have to set a strict mod format however it does rely on the files being in the game already to replace, any `bk2` files not found to replace are just ignored. If a mod contains both movie files and `pak`/`utoc`/`ucas` files, this is also supported and works with load ordering.
+
+### Changed
+
+- Updated metadata to display the extension name correctly within Vortex
 
 ## [0.1.2] - 2023-02-16
 

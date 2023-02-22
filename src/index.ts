@@ -17,7 +17,7 @@ import semver from "semver";
 // IDs for different stores and nexus
 const EPIC_ID = "fa4240e57a3c46b39f169041b7811293";
 const STEAM_ID = "990080";
-const NEXUS_ID = "hogwartslegacy";
+const GAME_ID = "hogwartslegacy";
 
 const LOADORDER_FILE = "loadOrder.json";
 const EXECUTABLE = "HogwartsLegacy.exe"; // path to executable, relative to game root
@@ -74,7 +74,7 @@ function main(context: types.IExtensionContext) {
 
   // register a whole game, basic metadata and folder paths
   context.registerGame({
-    id: NEXUS_ID,
+    id: GAME_ID,
     name: "Hogwarts Legacy",
     mergeMods: (mod) => MergeMods(mod, context),
     getGameVersion: getGameVersion,
@@ -102,7 +102,7 @@ function main(context: types.IExtensionContext) {
   });
 
   context.registerLoadOrder({
-    gameId: NEXUS_ID,
+    gameId: GAME_ID,
     validate: async () => Promise.resolve(undefined), // no validation needed
     deserializeLoadOrder: async () => await DeserializeLoadOrder(context),
     serializeLoadOrder: async (loadOrder, previousLoadOrder) => await SerializeLoadOrder(context, loadOrder, previousLoadOrder),
@@ -115,7 +115,7 @@ function main(context: types.IExtensionContext) {
   context.registerModType(
     "hogwarts-modtype-movies",
     95,
-    (gameId) => gameId === NEXUS_ID,
+    (gameId) => gameId === GAME_ID,
     (game) => GetMoviesModTypeRootPath(context, game),
     () => false,
     { mergeMods: true }
@@ -128,6 +128,35 @@ function main(context: types.IExtensionContext) {
     (filePath, mergePath) => DoMerge(context, filePath, mergePath),
     "hogwarts-modtype-movies"
   );
+
+  // 200 so it goes to bottom of menu list?
+  context.registerAction("mod-icons", 120, "open-ext", {}, "Open Save Game Folder", () => {
+    const api = context.api;
+    const state = api.getState();
+
+    const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered?.[GAME_ID];
+
+    if (discovery?.store == undefined) {
+      console.warn(`discovery is undefined`);
+    }
+
+    console.log(discovery);
+
+    // because of course epic is using a different folder name to Steam to store save game data in
+    const gameFolderName: string = discovery.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
+    const saveGameFolderPath: string = path.join(VortexUtils.GetLocalAppDataPath(), gameFolderName, "Saved", "SaveGames");
+
+    try {
+      util.opn(saveGameFolderPath);
+    } catch (error) {
+      console.warn(`${error}`);
+      return;
+    }
+    // } catch (error) {
+    //    console.warn(`${saveGameFolderPath} doesn't exist`);
+    //return;
+    // }
+  });
 
   return true;
 }
@@ -143,7 +172,7 @@ function GetMoviesModTypeRootPath(context: IExtensionContext, game: IGame): stri
 }
 
 function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDiscoveryResult): IMergeFilter {
-  if (game.id !== NEXUS_ID) {
+  if (game.id !== GAME_ID) {
     console.warn(`HOGWARTS: TestMerge() ${game.id} isn't for this merge function.`);
     return undefined;
   }
@@ -168,7 +197,7 @@ async function DoMerge(context: IExtensionContext, filePath: string, mergePath: 
   const state = context.api.getState();
 
   const profile: types.IProfile = selectors.activeProfile(state);
-  const installPath: string = selectors.installPathForGame(state, NEXUS_ID); // this is the root of staging mods folder for this game
+  const installPath: string = selectors.installPathForGame(state, GAME_ID); // this is the root of staging mods folder for this game
   const relativeStagingPath: string = path.relative(installPath, filePath); // path of the extracted file, when the above has been stripped out. essentially an accurate relative path the same as the isntructions array during the custom installer
   const relativePath: string = relativeStagingPath.split(path.sep).slice(1).join(path.sep); //
   const modId: string = relativeStagingPath.split(path.sep)[0]; //
@@ -222,7 +251,7 @@ async function TestForMoviesMod(files: string[], gameId: string): Promise<ISuppo
   // Make sure we're able to support this mod.
 
   // make sure the archive is for this game and contains at least 1 movie file
-  const supported = gameId == NEXUS_ID && files.find((file) => path.extname(file).toLowerCase() == MOVIES_EXTENSION.toLowerCase()) != undefined;
+  const supported = gameId == GAME_ID && files.find((file) => path.extname(file).toLowerCase() == MOVIES_EXTENSION.toLowerCase()) != undefined;
 
   console.log(`HOGWARTS: TestForMoviesMod() supported=${supported}`);
 
@@ -241,7 +270,7 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   // can't type function return type as the return resolve needs to return an inline object
 
   const state = context.api.getState();
-  const discovery = state.settings.gameMode?.discovered[NEXUS_ID];
+  const discovery = state.settings.gameMode?.discovered[GAME_ID];
 
   console.log(discovery);
   if (discovery == undefined) {
@@ -305,6 +334,8 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
         source: movieFile,
         destination: foundFile
       });
+    } else {
+      console.warn(`HOGWARTS: InstallMoviesMod() ${path.basename(movieFile).toLowerCase()} not found.`);
     }
   }
 
@@ -374,36 +405,41 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
   log("info", `Migrate oldVersion=${oldVersion}`);
 
   // if old version is newer than or equal to this version, then we just ignore
-  if (semver.gte(oldVersion, "0.1.2")) {
+  if (semver.gte(oldVersion, "0.2.10")) {
     log("info", "No need to migrate");
     return Promise.resolve();
   }
 
   const state = context.api.getState();
-  const discoveryPath = util.getSafe(state, ["settings", "gameMode", "discovered", NEXUS_ID, "path"], undefined);
-  const activatorId = selectors.activatorForGame(state, NEXUS_ID);
-  const activator = util.getActivator(activatorId);
+  const discoveryPath = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID, "path"], undefined);
 
-  if (discoveryPath === undefined || activator === undefined) {
-    log("warn", "discoveryPath or activator are undefined");
+  if (discoveryPath === undefined) {
+    log("warn", "discoveryPath is undefined");
     return Promise.resolve();
   }
 
-  const mods: { [modId: string]: types.IMod } = util.getSafe(state, ["persistent", "mods", NEXUS_ID], {});
+  const mods: { [modId: string]: types.IMod } = util.getSafe(state, ["persistent", "mods", GAME_ID], {});
   if (Object.keys(mods).length === 0) {
-    log("warn", "mods length is 0");
+    log("info", "mods length is 0 so no reason to migrate anything");
     return Promise.resolve();
+    3283;
   }
 
   const modsPath = path.join(discoveryPath, MODSFOLDER_PATH);
 
   log("info", `modsPath=${modsPath}`);
 
+  const result = context.api.sendNotification({
+    type: "info",
+    message:
+      "The Hogwarts Legacy Extension has been updated. If you previously installed a mod modifying movie files (e.g. paintings) then there is a good chance that they haven't been working as those type of mods weren't officially supported. If this is the case then please reinstall those individual mods."
+  });
+
   return context.api
     .awaitUI()
     .then(() => fs.ensureDirWritableAsync(modsPath))
-    .then(() => context.api.emitAndAwait("purge-mods-in-path", NEXUS_ID, "", modsPath))
-    .then(() => context.api.store.dispatch(actions.setDeploymentNecessary(NEXUS_ID, true)));
+    .then(() => context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath))
+    .then(() => context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)));
 
   // migration needs to happen as we are upgrading
 
@@ -471,7 +507,7 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
 
   // we only want to insert enabled mods.
   const enabledModIds = Object.keys(currentModsState).filter((modId) => util.getSafe(currentModsState, [modId, "enabled"], false));
-  const mods: Record<string, IMod> = util.getSafe(props.state, ["persistent", "mods", NEXUS_ID], {});
+  const mods: Record<string, IMod> = util.getSafe(props.state, ["persistent", "mods", GAME_ID], {});
 
   // set up blank load order entry array and we will try to fill it with loaded data from the file
   let data: ILoadOrderEntry[] = [];
@@ -489,7 +525,7 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
     }
   } catch (error) {
     // file doesn't exist
-    console.error(error);
+    console.warn(error);
   }
 
   // User may have disabled/removed a mod from the mods page - we need to filter out any existing
@@ -514,6 +550,8 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
   return Promise.resolve(filteredData);
 }
 
+//#region SOMETHING
+
 async function SerializeLoadOrder(context: types.IExtensionContext, loadOrder: types.LoadOrder, previousLoadOrder: types.LoadOrder): Promise<void> {
   console.log("HOGWARTS: SerializeLoadOrder");
 
@@ -531,10 +569,12 @@ async function SerializeLoadOrder(context: types.IExtensionContext, loadOrder: t
   }
 
   // something has changed so we need to tell vortex that a deployment will be necessary
-  context.api.store.dispatch(actions.setDeploymentNecessary(NEXUS_ID, true));
+  context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true));
 
   return Promise.resolve();
 }
+
+//#endregion
 
 async function setup(discovery: IDiscoveryResult) {
   const absoluteModFolderPath = path.join(discovery.path!, MODSFOLDER_PATH);
@@ -608,16 +648,16 @@ function GetVortexProperties(context: types.IExtensionContext, profileId?: strin
   const state = api.getState();
   const profile: types.IProfile = profileId !== undefined ? selectors.profileById(state, profileId) : selectors.activeProfile(state);
 
-  if (profile?.gameId !== NEXUS_ID) {
+  if (profile?.gameId !== GAME_ID) {
     return undefined;
   }
 
-  const discovery: types.IDiscoveryResult = util.getSafe(state, ["settings", "gameMode", "discovered", NEXUS_ID], undefined);
+  const discovery: types.IDiscoveryResult = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
   if (discovery?.path === undefined) {
     return undefined;
   }
 
-  const tempMods = util.getSafe(state, ["persistent", "mods", NEXUS_ID], {});
+  const tempMods = util.getSafe(state, ["persistent", "mods", GAME_ID], {});
   const mods = tempMods;
 
   return { api, state, profile, mods, discovery };

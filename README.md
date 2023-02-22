@@ -69,13 +69,14 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.2.3] - 2023-02-22
+## [0.2.10] - 2023-02-22
 
-Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive.
+Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive. Added menu item to open the save game folder.
 
 ### Added
 
 - Support for mods that replace the `.bk2` movies like those in picture frames and newspapers. Folder structure of the archive doesn't matter as the files to replace are searched for based on what is in the mod. This allows us not to have to set a strict mod format however it does rely on the files being in the game already to replace, any `bk2` files not found to replace are just ignored. If a mod contains both movie files and `pak`/`utoc`/`ucas` files, this is also supported and works with load ordering.
+- Added 'Open Save Game Folder' to the 'Open...' menu on the Mods page. This opens the save game folder normally located at `%AppData%\Local\HogwartsLegacy\Saved\SaveGames`.
 
 ### Changed
 

@@ -14,7 +14,7 @@ To be announced
 
 ### Fixed
 
-## [0.2.10] - 2023-02-22
+## [0.2.10] - 2023-02-23
 
 Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive. Added menu item to open the save game folder.
 

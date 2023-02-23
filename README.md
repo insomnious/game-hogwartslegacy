@@ -20,7 +20,7 @@ You can also manually install it by downloading the main file and dragging it in
 
 Afterwards, restart Vortex and you can begin installing supported Hogwarts Legacy mods with Vortex.
 
-If updating an extension, migration occurs that purges your mods folder and reinstalls any movie mods.
+If updating an extension, migration occurs that purges your mods folder and reinstalls any mods.
 
 # Game detection
 
@@ -69,7 +69,7 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.2.10] - 2023-02-22
+## [0.2.10] - 2023-02-23
 
 Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive. Added menu item to open the save game folder.
 

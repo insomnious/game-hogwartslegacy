@@ -77,7 +77,7 @@ function main(context: types.IExtensionContext) {
   context.registerGame({
     id: GAME_ID,
     name: "Hogwarts Legacy",
-    mergeMods: false,
+    mergeMods: true,
     getGameVersion: getGameVersion,
     queryPath: findGame,
     supportedTools: [],

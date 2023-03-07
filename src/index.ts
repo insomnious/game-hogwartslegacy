@@ -1,9 +1,26 @@
 import path from "path";
 import React, { ComponentProps } from "react";
-import { actions, FlexLayout, fs, log, selectors, types, util } from "vortex-api";
+import {
+  actions,
+  FlexLayout,
+  fs,
+  log,
+  selectors,
+  types,
+  util,
+} from "vortex-api";
 import { IDialogResult } from "vortex-api/lib/actions";
-import { ILoadOrderGameInfo, IValidationResult } from "vortex-api/lib/types/api";
-import { IExtensionApi, IExtensionContext, IInstruction, IMergeFilter, ISupportedResult } from "vortex-api/lib/types/IExtensionContext";
+import {
+  ILoadOrderGameInfo,
+  IValidationResult,
+} from "vortex-api/lib/types/api";
+import {
+  IExtensionApi,
+  IExtensionContext,
+  IInstruction,
+  IMergeFilter,
+  ISupportedResult,
+} from "vortex-api/lib/types/IExtensionContext";
 import { IGame } from "vortex-api/lib/types/IGame";
 import { IGameStoreEntry } from "vortex-api/lib/types/IGameStoreEntry";
 import { IDiscoveryResult, IMod, IState } from "vortex-api/lib/types/IState";
@@ -24,7 +41,13 @@ const LOADORDER_FILE = "loadOrder.json";
 const EXECUTABLE = "HogwartsLegacy.exe"; // path to executable, relative to game root
 const MODSFOLDER_PATH = path.join("Phoenix", "Content", "Paks", "~mods"); // relative to game root
 const MOVIESMOD_PATH = path.join("Phoenix", "Content"); // relative to game root, can't be /movies as we need to add pak files too sometimes
-const VERSION_PATH = path.join("Phoenix", "Content", "Data", "Version", "DA_Version.txt"); // relative to game root
+const VERSION_PATH = path.join(
+  "Phoenix",
+  "Content",
+  "Data",
+  "Version",
+  "DA_Version.txt",
+); // relative to game root
 const MOVIES_EXTENSION = ".bk2";
 const PAK_EXTENSIONS = [".pak", ".utoc", ".ucas"];
 const MOVIESMOD_EXTENSIONS = PAK_EXTENSIONS.concat(MOVIES_EXTENSION);
@@ -48,7 +71,10 @@ async function getGameVersion(discoveryPath: string) {
   }
 }
 
-async function OnWillDeploy(context: IExtensionContext, willDeployEventArgs: WillDeployEventArgs) {
+async function OnWillDeploy(
+  context: IExtensionContext,
+  willDeployEventArgs: WillDeployEventArgs,
+) {
   const state = context.api.getState();
   const profile: types.IProfile = selectors.activeProfile(state);
 
@@ -89,27 +115,28 @@ function main(context: types.IExtensionContext) {
     setup: setup,
     requiresCleanup: true,
     compatible: {
-      symlinks: false
+      symlinks: false,
     },
     environment: {
       ["SteamAppId"]: STEAM_ID,
-      ["EpicAppId"]: EPIC_ID
+      ["EpicAppId"]: EPIC_ID,
     },
     details: {
       ["SteamAppId"]: parseInt(STEAM_ID, 10),
       ["EpicAppId"]: EPIC_ID,
-      stopPatterns: ["[^/]*\\.pak$"]
+      stopPatterns: ["[^/]*\\.pak$"],
     },
-    requiresLauncher: requiresLauncher
+    requiresLauncher: requiresLauncher,
   });
 
   context.registerLoadOrder({
     gameId: GAME_ID,
     validate: async () => Promise.resolve(undefined), // no validation needed
     deserializeLoadOrder: async () => await DeserializeLoadOrder(context),
-    serializeLoadOrder: async (loadOrder, previousLoadOrder) => await SerializeLoadOrder(context, loadOrder, previousLoadOrder),
+    serializeLoadOrder: async (loadOrder, previousLoadOrder) =>
+      await SerializeLoadOrder(context, loadOrder, previousLoadOrder),
     toggleableEntries: false,
-    usageInstructions: `Re-position entries by draging and dropping them - note that the mod further down the list will be loaded last and win any conflicts. Mods that replace the .bk2 video files located in ${MOVIESMOD_PATH} aren't affected, only PAK (and their associated) files are.`
+    usageInstructions: `Re-position entries by draging and dropping them - note that the mod further down the list will be loaded last and win any conflicts. Mods that replace the .bk2 video files located in ${MOVIESMOD_PATH} aren't affected, only PAK (and their associated) files are.`,
   });
 
   context.registerMigration((oldVer) => Migrate(context, oldVer));
@@ -120,7 +147,7 @@ function main(context: types.IExtensionContext) {
     (gameId) => gameId === GAME_ID,
     (game) => GetMoviesModTypeRootPath(context, game),
     () => false,
-    { mergeMods: true, name: "Movie Replacer" }
+    { mergeMods: true, name: "Movie Replacer" },
   );
 
   context.registerModType(
@@ -129,50 +156,72 @@ function main(context: types.IExtensionContext) {
     (gameId) => gameId === GAME_ID,
     (game) => GetPakModsPath(context, game),
     (instructions) => TestForPakModType(instructions),
-    { mergeMods: (mod) => MergeMods(mod, context), name: "PAK Mod" }
+    { mergeMods: (mod) => MergeMods(mod, context), name: "PAK Mod" },
   );
 
-  context.registerInstaller("hogwarts-installer-movies", 90, TestForMoviesMod, (files) => InstallMoviesMod(files, context));
+  context.registerInstaller(
+    "hogwarts-installer-movies",
+    90,
+    TestForMoviesMod,
+    (files) => InstallMoviesMod(files, context),
+  );
 
   context.registerMerge(
     (game, gameDiscovery) => TestMerge(context, game, gameDiscovery),
     (filePath, mergePath) => DoMerge(context, filePath, mergePath),
-    "hogwarts-modtype-movies"
+    "hogwarts-modtype-movies",
   );
 
   // 200 so it goes to bottom of menu list?
-  context.registerAction("mod-icons", 120, "open-ext", {}, "Open Save Game Folder", () => {
-    const api = context.api;
-    const state = api.getState();
+  context.registerAction(
+    "mod-icons",
+    120,
+    "open-ext",
+    {},
+    "Open Save Game Folder",
+    () => {
+      const api = context.api;
+      const state = api.getState();
 
-    const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered?.[GAME_ID];
+      const discovery: types.IDiscoveryResult =
+        state.settings.gameMode.discovered?.[GAME_ID];
 
-    if (discovery?.store == undefined) {
-      console.warn(`discovery is undefined`);
-    }
+      if (discovery?.store == undefined) {
+        console.warn(`discovery is undefined`);
+      }
 
-    console.log(discovery);
+      console.log(discovery);
 
-    // because of course epic is using a different folder name to Steam to store save game data in
-    const gameFolderName: string = discovery.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
-    const saveGameFolderPath: string = path.join(VortexUtils.GetLocalAppDataPath(), gameFolderName, "Saved", "SaveGames");
+      // because of course epic is using a different folder name to Steam to store save game data in
+      const gameFolderName: string =
+        discovery.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
+      const saveGameFolderPath: string = path.join(
+        VortexUtils.GetLocalAppDataPath(),
+        gameFolderName,
+        "Saved",
+        "SaveGames",
+      );
 
-    try {
-      util.opn(saveGameFolderPath);
-    } catch (error) {
-      console.warn(`${error}`);
-      return;
-    }
-    // } catch (error) {
-    //    console.warn(`${saveGameFolderPath} doesn't exist`);
-    //return;
-    // }
-  });
+      try {
+        util.opn(saveGameFolderPath);
+      } catch (error) {
+        console.warn(`${error}`);
+        return;
+      }
+      // } catch (error) {
+      //    console.warn(`${saveGameFolderPath} doesn't exist`);
+      //return;
+      // }
+    },
+  );
 
   return true;
 }
 
-function GetMoviesModTypeRootPath(context: IExtensionContext, game: IGame): string {
+function GetMoviesModTypeRootPath(
+  context: IExtensionContext,
+  game: IGame,
+): string {
   const state: IState = context.api.getState();
   const gamePath: string = state.settings.gameMode.discovered?.[game.id]?.path;
 
@@ -192,9 +241,13 @@ function GetPakModsPath(context: IExtensionContext, game: IGame): string {
   else return undefined;
 }
 
-async function TestForPakModType(insturctions: IInstruction[]): Promise<boolean> {
+async function TestForPakModType(
+  insturctions: IInstruction[],
+): Promise<boolean> {
   const copyInstructions = insturctions.filter((i) => i.type === "copy");
-  const pakInstallInstructions = copyInstructions.filter((i) => path.extname(i.source) === ".pak");
+  const pakInstallInstructions = copyInstructions.filter(
+    (i) => path.extname(i.source) === ".pak",
+  );
   if (!pakInstallInstructions.length) return false;
 
   // Exclude criteria. Ignore LUA scripts, or logic mods.
@@ -203,15 +256,21 @@ async function TestForPakModType(insturctions: IInstruction[]): Promise<boolean>
       i.source.toLowerCase().endsWith(".lua") ||
       i.source.toLowerCase().endsWith("ue4sslogicmod.info") ||
       i.source.toLowerCase().endsWith(".ue4sslogicmod") ||
-      i.source.toLowerCase().endsWith(".logicmod")
+      i.source.toLowerCase().endsWith(".logicmod"),
   );
   // console.log('Pak mod?', !!excludeInstructions ? false : true);
   return !excludeInstructions ? false : true;
 }
 
-function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDiscoveryResult): IMergeFilter {
+function TestMerge(
+  context: IExtensionContext,
+  game: IGame,
+  gameDiscovery: IDiscoveryResult,
+): IMergeFilter {
   if (game.id !== GAME_ID) {
-    console.warn(`HOGWARTS: TestMerge() ${game.id} isn't for this merge function.`);
+    console.warn(
+      `HOGWARTS: TestMerge() ${game.id} isn't for this merge function.`,
+    );
     return undefined;
   }
 
@@ -221,7 +280,7 @@ function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDisc
     baseFiles: () => [],
     filter: (filePath) => {
       return PAK_EXTENSIONS.includes(path.extname(filePath));
-    } //isConfig(filePath)
+    }, //isConfig(filePath)
   };
 }
 
@@ -231,22 +290,33 @@ function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDisc
  * @param filePath Extracted from the original archive, after a custom installer has potentially manipulated it, this is our absolute source
  * @param mergePath New merge folder where files need to be copied/linked ready for deployment to take over
  */
-async function DoMerge(context: IExtensionContext, filePath: string, mergePath: string): Promise<void> {
+async function DoMerge(
+  context: IExtensionContext,
+  filePath: string,
+  mergePath: string,
+): Promise<void> {
   const state = context.api.getState();
 
   const profile: types.IProfile = selectors.activeProfile(state);
   const installPath: string = selectors.installPathForGame(state, GAME_ID); // this is the root of staging mods folder for this game
   const relativeStagingPath: string = path.relative(installPath, filePath); // path of the extracted file, when the above has been stripped out. essentially an accurate relative path the same as the isntructions array during the custom installer
-  const relativePath: string = relativeStagingPath.split(path.sep).slice(1).join(path.sep); //
+  const relativePath: string = relativeStagingPath
+    .split(path.sep)
+    .slice(1)
+    .join(path.sep); //
   const modId: string = relativeStagingPath.split(path.sep)[0]; //
   const targetPath: string = path.join(mergePath, relativePath); // the empty merged staging folder, plus the file and path from the archive
 
   console.log(
-    `HOGWARTS: DoMerge() filePath=${filePath} mergePath=${mergePath} installPath=${installPath} relativeStagingPath=${relativeStagingPath} relativePath=${relativePath} targetPath=${targetPath} modId=${modId}`
+    `HOGWARTS: DoMerge() filePath=${filePath} mergePath=${mergePath} installPath=${installPath} relativeStagingPath=${relativeStagingPath} relativePath=${relativePath} targetPath=${targetPath} modId=${modId}`,
   );
 
   // Retrieve the load order as stored in Vortex's application state.
-  const loadOrder = util.getSafe(context.api.getState(), ["persistent", "loadOrder", profile.id], []);
+  const loadOrder = util.getSafe(
+    context.api.getState(),
+    ["persistent", "loadOrder", profile.id],
+    [],
+  );
 
   //console.log(loadOrder);
   // Find the mod entry in the load order state and insert the prefix in front
@@ -258,38 +328,62 @@ async function DoMerge(context: IExtensionContext, filePath: string, mergePath: 
   //console.log(`HOGWARTS: DoMerge() index=${index} prefix=${prefix}`);
 
   // just in case?
-  await fs.ensureDirWritableAsync(path.dirname(targetPath), () => Promise.resolve());
+  await fs.ensureDirWritableAsync(path.dirname(targetPath), () =>
+    Promise.resolve(),
+  );
 
   // lets decide what to do with what file
   if (path.extname(filePath) == MOVIES_EXTENSION) {
-    console.log(`HOGWARTS: DoMerge() this is a movie so I think it needs to go here... ${targetPath}`);
+    console.log(
+      `HOGWARTS: DoMerge() this is a movie so I think it needs to go here... ${targetPath}`,
+    );
 
     // hard link instead of actual copy seeing as we are just renaming and changing folders, not changing contents
     await fs.linkAsync(filePath, targetPath);
   } else if (PAK_EXTENSIONS.includes(path.extname(filePath))) {
     // add a folder with a prefix before the filename
-    const prefixedTargetPath: string = path.join(path.dirname(targetPath), prefix + "-" + modId, path.basename(targetPath));
+    const prefixedTargetPath: string = path.join(
+      path.dirname(targetPath),
+      prefix + "-" + modId,
+      path.basename(targetPath),
+    );
 
     // creates any necessary folders
-    await fs.ensureDirWritableAsync(path.dirname(prefixedTargetPath), () => Promise.resolve());
+    await fs.ensureDirWritableAsync(path.dirname(prefixedTargetPath), () =>
+      Promise.resolve(),
+    );
 
-    console.log(`HOGWARTS: DoMerge() this is a pak|utoc|ucas so I think it needs to go here... ${prefixedTargetPath}`);
+    console.log(
+      `HOGWARTS: DoMerge() this is a pak|utoc|ucas so I think it needs to go here... ${prefixedTargetPath}`,
+    );
 
     // hard link instead of actual copy seeing as we are just renaming and changing folders, not changing contents
     await fs.linkAsync(filePath, prefixedTargetPath);
   } else {
-    console.warn(`HOGWARTS: DoMerge() ${path.extname(filePath)} is an unknown extension and no idea how that slipped through the net.`);
+    console.warn(
+      `HOGWARTS: DoMerge() ${path.extname(
+        filePath,
+      )} is an unknown extension and no idea how that slipped through the net.`,
+    );
     Promise.reject("Unknown file extension");
   }
 
   return Promise.resolve();
 }
 
-async function TestForMoviesMod(files: string[], gameId: string): Promise<ISupportedResult> {
+async function TestForMoviesMod(
+  files: string[],
+  gameId: string,
+): Promise<ISupportedResult> {
   // Make sure we're able to support this mod.
 
   // make sure the archive is for this game and contains at least 1 movie file
-  const supported = gameId == GAME_ID && files.find((file) => path.extname(file).toLowerCase() == MOVIES_EXTENSION.toLowerCase()) != undefined;
+  const supported =
+    gameId == GAME_ID &&
+    files.find(
+      (file) =>
+        path.extname(file).toLowerCase() == MOVIES_EXTENSION.toLowerCase(),
+    ) != undefined;
 
   console.log(`HOGWARTS: TestForMoviesMod() supported=${supported}`);
 
@@ -300,7 +394,7 @@ async function TestForMoviesMod(files: string[], gameId: string): Promise<ISuppo
 
   return Promise.resolve({
     supported,
-    requiredFiles: []
+    requiredFiles: [],
   });
 }
 
@@ -320,7 +414,9 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   const paksPath = path.join(discovery.path, MODSFOLDER_PATH);
   const moviesPath = path.join(discovery.path, MOVIESMOD_PATH, "Movies");
 
-  console.log(`HOGWARTS: InstallMoviesMod() gamePath=${gamePath} paksPath=${paksPath} moviesPath=${moviesPath} rootPath=${rootPath}`);
+  console.log(
+    `HOGWARTS: InstallMoviesMod() gamePath=${gamePath} paksPath=${paksPath} moviesPath=${moviesPath} rootPath=${rootPath}`,
+  );
 
   // Remove empty directories (if we don't, we get an error in Vortex as it can't process empty directories)
   const filtered = files.filter((file) => !file.endsWith(path.sep));
@@ -332,8 +428,12 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
    */
 
   // just movie files
-  const movies = filtered.filter((file) => path.extname(file) == MOVIES_EXTENSION);
-  const paks = filtered.filter((file) => PAK_EXTENSIONS.includes(path.extname(file))); // add any of the pak, or associated, files
+  const movies = filtered.filter(
+    (file) => path.extname(file) == MOVIES_EXTENSION,
+  );
+  const paks = filtered.filter((file) =>
+    PAK_EXTENSIONS.includes(path.extname(file)),
+  ); // add any of the pak, or associated, files
 
   console.log("HOGWARTS: InstallMoviesMod() movies= paks=");
   console.log(movies);
@@ -345,7 +445,11 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   // Promise.reject("discovery is undefined");
   //}
 
-  const foundFiles: string[] = await GetFilesInFolder(moviesPath, rootPath, true);
+  const foundFiles: string[] = await GetFilesInFolder(
+    moviesPath,
+    rootPath,
+    true,
+  );
 
   //console.log("HOGWARTS: InstallMoviesMod() foundFiles=");
   //console.log(foundFiles);
@@ -361,19 +465,31 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   // loop through and find matching movies to replace
   for (const movieFile of movies) {
     // compare filename of mod file to filename of original file
-    const foundFile: string = foundFiles.find((file) => path.basename(file).toLowerCase() == path.basename(movieFile).toLowerCase());
+    const foundFile: string = foundFiles.find(
+      (file) =>
+        path.basename(file).toLowerCase() ==
+        path.basename(movieFile).toLowerCase(),
+    );
 
-    console.log(`HOGWARTS: InstallMoviesMod() Looking for ${path.basename(movieFile).toLowerCase()}... foundFile=${foundFile}`);
+    console.log(
+      `HOGWARTS: InstallMoviesMod() Looking for ${path
+        .basename(movieFile)
+        .toLowerCase()}... foundFile=${foundFile}`,
+    );
 
     // if we have a found a matching original file, then add it as needing replacing in the instructions array
     if (foundFile != undefined) {
       instructions.push({
         type: "copy",
         source: movieFile,
-        destination: foundFile
+        destination: foundFile,
       });
     } else {
-      console.warn(`HOGWARTS: InstallMoviesMod() ${path.basename(movieFile).toLowerCase()} not found.`);
+      console.warn(
+        `HOGWARTS: InstallMoviesMod() ${path
+          .basename(movieFile)
+          .toLowerCase()} not found.`,
+      );
     }
   }
 
@@ -383,7 +499,7 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
     instructions.push({
       type: "copy",
       source: pakFile,
-      destination: path.join("Paks", "~mods", path.basename(pakFile))
+      destination: path.join("Paks", "~mods", path.basename(pakFile)),
     });
   }
 
@@ -393,7 +509,11 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   return Promise.resolve({ instructions });
 }
 
-async function GetFilesInFolder(folderPath: string, relativeTo?: string, recursive?: boolean): Promise<string[]> {
+async function GetFilesInFolder(
+  folderPath: string,
+  relativeTo?: string,
+  recursive?: boolean,
+): Promise<string[]> {
   let files: string[] = [];
   const items = await fs.readdirAsync(folderPath); // this array is list is relative to dirName, not absolute
 
@@ -412,7 +532,11 @@ async function GetFilesInFolder(folderPath: string, relativeTo?: string, recursi
 
       // if searching recursively, lets dig in deeper
       if (recursive != undefined) {
-        const moreFiles = await GetFilesInFolder(absItemPath, relativeTo, recursive);
+        const moreFiles = await GetFilesInFolder(
+          absItemPath,
+          relativeTo,
+          recursive,
+        );
         files = files.concat(moreFiles);
       }
     } else {
@@ -420,7 +544,9 @@ async function GetFilesInFolder(folderPath: string, relativeTo?: string, recursi
       //console.log(`HOGWARTS: GetFileList() ${item} is a file. Lets add it`);
       if (relativeTo != undefined && folderPath.indexOf(relativeTo) != -1) {
         // we've matched a full path to make relative, so lets remove it and use that as our final path
-        const relativePath = folderPath.substring(folderPath.indexOf(relativeTo) + relativeTo.length);
+        const relativePath = folderPath.substring(
+          folderPath.indexOf(relativeTo) + relativeTo.length,
+        );
         files.push(path.join(relativePath, item));
       } else {
         // nothing matched or we don't need to check, add full absolute path
@@ -457,14 +583,22 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
   }
 
   const state = context.api.getState();
-  const discoveryPath = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID, "path"], undefined);
+  const discoveryPath = util.getSafe(
+    state,
+    ["settings", "gameMode", "discovered", GAME_ID, "path"],
+    undefined,
+  );
 
   if (discoveryPath === undefined) {
     log("warn", "discoveryPath is undefined");
     return Promise.resolve();
   }
 
-  const mods: { [modId: string]: types.IMod } = util.getSafe(state, ["persistent", "mods", GAME_ID], {});
+  const mods: { [modId: string]: types.IMod } = util.getSafe(
+    state,
+    ["persistent", "mods", GAME_ID],
+    {},
+  );
   if (Object.keys(mods).length === 0) {
     log("info", "mods length is 0 so no reason to migrate anything");
     return Promise.resolve();
@@ -478,14 +612,18 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
   const result = context.api.sendNotification({
     type: "info",
     message:
-      "The Hogwarts Legacy Extension has been updated. If you previously installed a mod modifying movie files (e.g. paintings) then there is a good chance that they haven't been working as those type of mods weren't officially supported. If this is the case then please reinstall those individual mods."
+      "The Hogwarts Legacy Extension has been updated. If you previously installed a mod modifying movie files (e.g. paintings) then there is a good chance that they haven't been working as those type of mods weren't officially supported. If this is the case then please reinstall those individual mods.",
   });
 
   return context.api
     .awaitUI()
     .then(() => fs.ensureDirWritableAsync(modsPath))
-    .then(() => context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath))
-    .then(() => context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)));
+    .then(() =>
+      context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath),
+    )
+    .then(() =>
+      context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)),
+    );
 
   // migration needs to happen as we are upgrading
 
@@ -509,7 +647,11 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
   }
 
   // Retrieve the load order as stored in Vortex's application state.
-  const loadOrder = util.getSafe(props.state, ["persistent", "loadOrder", props.profile.id], []);
+  const loadOrder = util.getSafe(
+    props.state,
+    ["persistent", "loadOrder", props.profile.id],
+    [],
+  );
 
   // Find the mod entry in the load order state and insert the prefix in front
   //  of the mod's name/id/whatever
@@ -538,29 +680,43 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
  * Should be used to filter and insert wanted data into Vortex's loadOrder application state. Once that's done, Vortex
  * will trigger a serialization event which will ensure the data is written to the load order file.
  */
-async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<types.LoadOrder> {
+async function DeserializeLoadOrder(
+  context: types.IExtensionContext,
+): Promise<types.LoadOrder> {
   //console.log("HOGWARTS: DeserializeLoadOrder");
 
   // get all the main vortex properties
   const props: IProps = GetVortexProperties(context);
 
   // build path to load order file
-  const loadOrderPath = path.join(VortexUtils.GetUserDataPath(), props.profile.gameId, props.profile.id + "_" + LOADORDER_FILE);
+  const loadOrderPath = path.join(
+    VortexUtils.GetUserDataPath(),
+    props.profile.gameId,
+    props.profile.id + "_" + LOADORDER_FILE,
+  );
   //console.log(`loadOrderPath=${loadOrderPath}`);
 
   // get current state of the mods
   const currentModsState = util.getSafe(props.profile, ["modState"], {});
 
   // we only want to insert enabled mods.
-  const enabledModIds = Object.keys(currentModsState).filter((modId) => util.getSafe(currentModsState, [modId, "enabled"], false));
-  const mods: Record<string, IMod> = util.getSafe(props.state, ["persistent", "mods", GAME_ID], {});
+  const enabledModIds = Object.keys(currentModsState).filter((modId) =>
+    util.getSafe(currentModsState, [modId, "enabled"], false),
+  );
+  const mods: Record<string, IMod> = util.getSafe(
+    props.state,
+    ["persistent", "mods", GAME_ID],
+    {},
+  );
 
   // set up blank load order entry array and we will try to fill it with loaded data from the file
   let data: ILoadOrderEntry[] = [];
 
   // try to load serialized data
   try {
-    const fileData = await fs.readFileAsync(loadOrderPath, { encoding: "utf8" });
+    const fileData = await fs.readFileAsync(loadOrderPath, {
+      encoding: "utf8",
+    });
     //console.log(fileData);
 
     // try to parse loaded file into array of load order entry
@@ -580,7 +736,9 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
 
   // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
   const newMods = enabledModIds.filter(
-    (id) => mods[id]?.type === "hogwarts-PAK-modtype" && filteredData.find((loEntry) => loEntry.id === id) === undefined
+    (id) =>
+      mods[id]?.type === "hogwarts-PAK-modtype" &&
+      filteredData.find((loEntry) => loEntry.id === id) === undefined,
   );
 
   // removed mods[id]?.type != "hogwarts-modtype-movies"
@@ -591,7 +749,8 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
       id: newMod,
       modId: newMod,
       enabled: true,
-      name: mods[newMod] !== undefined ? util.renderModName(mods[newMod]) : newMod
+      name:
+        mods[newMod] !== undefined ? util.renderModName(mods[newMod]) : newMod,
     });
   });
 
@@ -600,18 +759,28 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
 
 //#region SOMETHING
 
-async function SerializeLoadOrder(context: types.IExtensionContext, loadOrder: types.LoadOrder, previousLoadOrder: types.LoadOrder): Promise<void> {
+async function SerializeLoadOrder(
+  context: types.IExtensionContext,
+  loadOrder: types.LoadOrder,
+  previousLoadOrder: types.LoadOrder,
+): Promise<void> {
   console.log("HOGWARTS: SerializeLoadOrder");
 
   const props: IProps = GetVortexProperties(context);
 
   // build path to load order file
-  const loadOrderPath = path.join(VortexUtils.GetUserDataPath(), props.profile.gameId, props.profile.id + "_" + LOADORDER_FILE);
+  const loadOrderPath = path.join(
+    VortexUtils.GetUserDataPath(),
+    props.profile.gameId,
+    props.profile.id + "_" + LOADORDER_FILE,
+  );
   console.log(`loadOrderPath=${loadOrderPath}`);
 
   // write prefixed load order to file
   try {
-    await fs.writeFileAsync(loadOrderPath, JSON.stringify(loadOrder, null, 4), { encoding: "utf8" });
+    await fs.writeFileAsync(loadOrderPath, JSON.stringify(loadOrder, null, 4), {
+      encoding: "utf8",
+    });
   } catch (error) {
     return Promise.reject(error);
   }
@@ -645,15 +814,15 @@ async function requiresLauncher(gamePath: string, store?: string) {
       addInfo: {
         appId: STEAM_ID,
         parameters: [],
-        launchType: "gamestore"
-      }
+        launchType: "gamestore",
+      },
     });
   } else if (store === "epic") {
     return Promise.resolve({
       launcher: "epic",
       addInfo: {
-        appId: EPIC_ID
-      }
+        appId: EPIC_ID,
+      },
     });
   }
 
@@ -666,7 +835,10 @@ async function findGame() {
   //console.log("findGame()");
 
   try {
-    const game: IGameStoreEntry = await util.GameStoreHelper.findByAppId([EPIC_ID, STEAM_ID]);
+    const game: IGameStoreEntry = await util.GameStoreHelper.findByAppId([
+      EPIC_ID,
+      STEAM_ID,
+    ]);
     return Promise.resolve(game.gamePath);
   } catch (error) {
     console.error(error);
@@ -691,16 +863,26 @@ function MakePrefixFromIndex(input: number): string {
   return util.pad(res as any, "A", 3);
 }
 
-function GetVortexProperties(context: types.IExtensionContext, profileId?: string): IProps {
+function GetVortexProperties(
+  context: types.IExtensionContext,
+  profileId?: string,
+): IProps {
   const api = context.api;
   const state = api.getState();
-  const profile: types.IProfile = profileId !== undefined ? selectors.profileById(state, profileId) : selectors.activeProfile(state);
+  const profile: types.IProfile =
+    profileId !== undefined
+      ? selectors.profileById(state, profileId)
+      : selectors.activeProfile(state);
 
   if (profile?.gameId !== GAME_ID) {
     return undefined;
   }
 
-  const discovery: types.IDiscoveryResult = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
+  const discovery: types.IDiscoveryResult = util.getSafe(
+    state,
+    ["settings", "gameMode", "discovered", GAME_ID],
+    undefined,
+  );
   if (discovery?.path === undefined) {
     return undefined;
   }

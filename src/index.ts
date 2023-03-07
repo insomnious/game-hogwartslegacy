@@ -13,7 +13,7 @@ import { VortexEvents, WillDeployEventArgs } from "./VortexEvents";
 import * as VortexUtils from "./VortexUtils";
 import { ILoadOrderEntry, IProps, ISerializableData, LoadOrder } from "./types";
 import semver from "semver";
-import { migrate0_2_11 } from './migration';
+import { migrate0_2_11 } from "./migration";
 
 // IDs for different stores and nexus
 const EPIC_ID = "fa4240e57a3c46b39f169041b7811293";
@@ -51,6 +51,7 @@ async function getGameVersion(discoveryPath: string) {
 async function OnWillDeploy(context: IExtensionContext, willDeployEventArgs: WillDeployEventArgs) {
   const state = context.api.getState();
   const profile: types.IProfile = selectors.activeProfile(state);
+
   /*
   console.log("OnWillDeploy");
   console.log(context);
@@ -81,7 +82,7 @@ function main(context: types.IExtensionContext) {
     getGameVersion: getGameVersion,
     queryPath: findGame,
     supportedTools: [],
-    queryModPath: () => '.',
+    queryModPath: () => ".",
     logo: "gameart.jpg",
     executable: () => EXECUTABLE,
     requiredFiles: [EXECUTABLE],
@@ -119,7 +120,7 @@ function main(context: types.IExtensionContext) {
     (gameId) => gameId === GAME_ID,
     (game) => GetMoviesModTypeRootPath(context, game),
     () => false,
-    { mergeMods: true, name: 'Movie Replacer' }
+    { mergeMods: true, name: "Movie Replacer" }
   );
 
   context.registerModType(
@@ -128,8 +129,8 @@ function main(context: types.IExtensionContext) {
     (gameId) => gameId === GAME_ID,
     (game) => GetPakModsPath(context, game),
     (instructions) => TestForPakModType(instructions),
-    { mergeMods: (mod) => MergeMods(mod, context), name: 'PAK Mod' }
-  )
+    { mergeMods: (mod) => MergeMods(mod, context), name: "PAK Mod" }
+  );
 
   context.registerInstaller("hogwarts-installer-movies", 90, TestForMoviesMod, (files) => InstallMoviesMod(files, context));
 
@@ -192,19 +193,20 @@ function GetPakModsPath(context: IExtensionContext, game: IGame): string {
 }
 
 async function TestForPakModType(insturctions: IInstruction[]): Promise<boolean> {
-  const copyInstructions = insturctions.filter(i => i.type === 'copy');
-  const pakInstallInstructions = copyInstructions.filter(i => path.extname(i.source) === '.pak');
+  const copyInstructions = insturctions.filter((i) => i.type === "copy");
+  const pakInstallInstructions = copyInstructions.filter((i) => path.extname(i.source) === ".pak");
   if (!pakInstallInstructions.length) return false;
 
   // Exclude criteria. Ignore LUA scripts, or logic mods.
-  const excludeInstructions = copyInstructions.find(i => 
-    i.source.toLowerCase().endsWith('.lua') ||
-    i.source.toLowerCase().endsWith('ue4sslogicmod.info') ||
-    i.source.toLowerCase().endsWith('.ue4sslogicmod') ||
-    i.source.toLowerCase().endsWith('.logicmod')
+  const excludeInstructions = copyInstructions.find(
+    (i) =>
+      i.source.toLowerCase().endsWith(".lua") ||
+      i.source.toLowerCase().endsWith("ue4sslogicmod.info") ||
+      i.source.toLowerCase().endsWith(".ue4sslogicmod") ||
+      i.source.toLowerCase().endsWith(".logicmod")
   );
   // console.log('Pak mod?', !!excludeInstructions ? false : true);
-  return !!excludeInstructions ? false : true;
+  return !excludeInstructions ? false : true;
 }
 
 function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDiscoveryResult): IMergeFilter {
@@ -351,7 +353,7 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   //const matchedFiles = foundFiles.map((file) => path.basename(file));
 
   // empty instructions array
-  let instructions: IInstruction[] = [];
+  const instructions: IInstruction[] = [];
 
   // adds instruction to set a different mod type
   instructions.push({ type: "setmodtype", value: "hogwarts-modtype-movies" });
@@ -443,9 +445,8 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
   if (semver.lt(oldVersion, "0.2.11")) {
     try {
       await migrate0_2_11(context, oldVersion);
-    }
-    catch(err) {
-      log('error', 'Failed to migrate Hogwarts Legacy to 0.2.11');
+    } catch (err) {
+      log("error", "Failed to migrate Hogwarts Legacy to 0.2.11");
     }
   }
 
@@ -578,7 +579,9 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
   const filteredData = data.filter((entry) => enabledModIds.includes(entry.id));
 
   // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
-  const newMods = enabledModIds.filter((id) => mods[id]?.type === "hogwarts-PAK-modtype" && filteredData.find((loEntry) => loEntry.id === id) === undefined);
+  const newMods = enabledModIds.filter(
+    (id) => mods[id]?.type === "hogwarts-PAK-modtype" && filteredData.find((loEntry) => loEntry.id === id) === undefined
+  );
 
   // removed mods[id]?.type != "hogwarts-modtype-movies"
 

@@ -1,5 +1,6 @@
 import path from 'path';
-import { types, log, actions } from 'vortex-api';
+import * as VortexUtils from "./VortexUtils";
+import { types, log, actions, fs, util, selectors } from 'vortex-api';
 
 const GAME_ID = "hogwartslegacy";
 const MODSFOLDER_PATH = path.join("Phoenix", "Content", "Paks", "~mods");
@@ -11,7 +12,7 @@ export async function migrate0_2_11(context: types.IExtensionContext, oldversion
     const state = context.api.getState();
     const mods = state.persistent.mods[GAME_ID] ?? {};
 
-    if (!!Object.keys(mods)) {
+    if (!Object.keys(mods).length) {
         log('info', 'No mods to migrate for Hogwarts Legacy');
         return;
     }
@@ -34,9 +35,44 @@ export async function migrate0_2_11(context: types.IExtensionContext, oldversion
         log('error', 'Failed to clean up ~mods folder for Hogwarts Legacy', err);
     }
 
+    // Reset the load order by deleting the JSON file.
+    try {
+        const loadorderPath = path.join(VortexUtils.GetUserDataPath(), GAME_ID);
+        const loFiles = (await fs.readdirAsync(loadorderPath)).filter(f => f.endsWith('loadOrder.json'));
+        for (const file of loFiles) {
+            log('debug', 'Removing LO file');
+            await fs.unlinkAsync(path.join(loadorderPath, file));
+        }
+    }
+    catch(err) {
+        log('error', 'Could not remove load order files', err);
+    }
+
+    const stagingPath = selectors.installPathForGame(state, GAME_ID);
+
     for (const mod of defaultMods) {
-        const dispatch = context.api.store?.dispatch
-        dispatch(actions.setModType(GAME_ID, mod.id, 'hogwarts-PAK-modtype'));
+        const modFolder = path.join(stagingPath, mod.installationPath);
+
+        try {
+            const modFiles = await fs.readdirAsync(modFolder);
+            // If no PAKs, skip.
+            if (!modFiles.find(f => path.extname(f) === '.pak')) continue;
+            const exceptions = modFiles.find(f => 
+                f.toLowerCase().endsWith('.lua') ||
+                f.toLowerCase().endsWith('ue4sslogicmod.info') ||
+                f.toLowerCase().endsWith('.ue4sslogicmod') ||
+                f.toLowerCase().endsWith('.logicmod')
+            );
+            // If exception files, skip. 
+            if (!!exceptions) continue;
+
+            log('debug', `Changing mod type: ${mod.attributes.name}`);
+            const dispatch = context.api.store?.dispatch
+            dispatch(actions.setModType(GAME_ID, mod.id, 'hogwarts-PAK-modtype'));
+        }
+        catch(err) {
+            log('error', `Error checking mod ${mod.id}`, err);
+        }
     }
 
 }

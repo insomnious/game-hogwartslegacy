@@ -124,7 +124,7 @@ function main(context: types.IExtensionContext) {
 
   context.registerModType(
     "hogwarts-PAK-modtype",
-    30,
+    25,
     (gameId) => gameId === GAME_ID,
     (game) => GetPakModsPath(context, game),
     (instructions) => TestForPakModType(instructions),
@@ -191,7 +191,7 @@ function GetPakModsPath(context: IExtensionContext, game: IGame): string {
   else return undefined;
 }
 
-function TestForPakModType(insturctions: IInstruction[]): boolean {
+async function TestForPakModType(insturctions: IInstruction[]): Promise<boolean> {
   const copyInstructions = insturctions.filter(i => i.type === 'copy');
   const pakInstallInstructions = copyInstructions.filter(i => path.extname(i.source) === '.pak');
   if (!pakInstallInstructions.length) return false;
@@ -203,7 +203,8 @@ function TestForPakModType(insturctions: IInstruction[]): boolean {
     i.source.toLowerCase().endsWith('.ue4sslogicmod') ||
     i.source.toLowerCase().endsWith('.logicmod')
   );
-  return !!excludeInstructions ? false : true
+  // console.log('Pak mod?', !!excludeInstructions ? false : true);
+  return !!excludeInstructions ? false : true;
 }
 
 function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDiscoveryResult): IMergeFilter {
@@ -577,7 +578,7 @@ async function DeserializeLoadOrder(context: types.IExtensionContext): Promise<t
   const filteredData = data.filter((entry) => enabledModIds.includes(entry.id));
 
   // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
-  const newMods = enabledModIds.filter((id) => mods[id]?.type != "collection" && filteredData.find((loEntry) => loEntry.id === id) === undefined);
+  const newMods = enabledModIds.filter((id) => mods[id]?.type === "hogwarts-PAK-modtype" && filteredData.find((loEntry) => loEntry.id === id) === undefined);
 
   // removed mods[id]?.type != "hogwarts-modtype-movies"
 

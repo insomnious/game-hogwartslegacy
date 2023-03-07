@@ -13,6 +13,7 @@ import { VortexEvents, WillDeployEventArgs } from "./VortexEvents";
 import * as VortexUtils from "./VortexUtils";
 import { ILoadOrderEntry, IProps, ISerializableData, LoadOrder } from "./types";
 import semver from "semver";
+import { migrate0_2_11 } from './migration';
 
 // IDs for different stores and nexus
 const EPIC_ID = "fa4240e57a3c46b39f169041b7811293";
@@ -76,11 +77,11 @@ function main(context: types.IExtensionContext) {
   context.registerGame({
     id: GAME_ID,
     name: "Hogwarts Legacy",
-    mergeMods: (mod) => MergeMods(mod, context),
+    mergeMods: false,
     getGameVersion: getGameVersion,
     queryPath: findGame,
     supportedTools: [],
-    queryModPath: () => MODSFOLDER_PATH,
+    queryModPath: () => '.',
     logo: "gameart.jpg",
     executable: () => EXECUTABLE,
     requiredFiles: [EXECUTABLE],
@@ -118,8 +119,17 @@ function main(context: types.IExtensionContext) {
     (gameId) => gameId === GAME_ID,
     (game) => GetMoviesModTypeRootPath(context, game),
     () => false,
-    { mergeMods: true }
+    { mergeMods: true, name: 'Movie Replacer' }
   );
+
+  context.registerModType(
+    "hogwarts-PAK-modtype",
+    30,
+    (gameId) => gameId === GAME_ID,
+    (game) => GetPakModsPath(context, game),
+    (instructions) => TestForPakModType(instructions),
+    { mergeMods: (mod) => MergeMods(mod, context), name: 'PAK Mod' }
+  )
 
   context.registerInstaller("hogwarts-installer-movies", 90, TestForMoviesMod, (files) => InstallMoviesMod(files, context));
 
@@ -169,6 +179,31 @@ function GetMoviesModTypeRootPath(context: IExtensionContext, game: IGame): stri
 
   if (gamePath != undefined) return path.join(gamePath, MOVIESMOD_PATH);
   else return undefined;
+}
+
+function GetPakModsPath(context: IExtensionContext, game: IGame): string {
+  const state: IState = context.api.getState();
+  const gamePath: string = state.settings.gameMode.discovered?.[game.id]?.path;
+
+  //console.log(`HOGWARTS: GetMovieFolderPath() ${path.join(gamePath, MOVIESFOLDER_PATH)}`);
+
+  if (gamePath != undefined) return path.join(gamePath, MODSFOLDER_PATH);
+  else return undefined;
+}
+
+function TestForPakModType(insturctions: IInstruction[]): boolean {
+  const copyInstructions = insturctions.filter(i => i.type === 'copy');
+  const pakInstallInstructions = copyInstructions.filter(i => path.extname(i.source) === '.pak');
+  if (!pakInstallInstructions.length) return false;
+
+  // Exclude criteria. Ignore LUA scripts, or logic mods.
+  const excludeInstructions = copyInstructions.find(i => 
+    i.source.toLowerCase().endsWith('.lua') ||
+    i.source.toLowerCase().endsWith('ue4sslogicmod.info') ||
+    i.source.toLowerCase().endsWith('.ue4sslogicmod') ||
+    i.source.toLowerCase().endsWith('.logicmod')
+  );
+  return !!excludeInstructions ? false : true
 }
 
 function TestMerge(context: IExtensionContext, game: IGame, gameDiscovery: IDiscoveryResult): IMergeFilter {
@@ -403,6 +438,15 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
    */
 
   log("info", `Migrate oldVersion=${oldVersion}`);
+
+  if (semver.lt(oldVersion, "0.2.11")) {
+    try {
+      await migrate0_2_11(context, oldVersion);
+    }
+    catch(err) {
+      log('error', 'Failed to migrate Hogwarts Legacy to 0.2.11');
+    }
+  }
 
   // if old version is newer than or equal to this version, then we just ignore
   if (semver.gte(oldVersion, "0.2.10")) {

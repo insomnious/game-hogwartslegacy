@@ -6,12 +6,16 @@
   "private": true,
   "main": "./dist/index.ts",
   "type": "module",
+    "config": {
+    "extensionName": "Game: Hogwarts Legacy",
+    "issueTracker": "https://github.com/lordvoldem0rt/game-hogwartslegacy/issues"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "prettier-format": "prettier --config .prettierrc src/**/*.ts --write",
-    "build": "npx webpack",
+    "build": "npx webpack && node createinfojson.js",
     "buildandcopyplugin": "npx webpack && node createinfojson.js && node copyplugin.js",
     "copyplugin": "node copyplugin.js"
   },

@@ -16,7 +16,7 @@ export class VortexEvents {
   //private _api:IExtensionApi;
 
   constructor(context: IExtensionContext) {
-    const _this = this;
+    //const _this = this;
     const _context = context;
 
     // listen for vortex event so we can refire

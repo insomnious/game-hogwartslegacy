@@ -14,6 +14,20 @@ To be announced
 
 ### Fixed
 
+## [0.2.11] - 2023-03-07
+
+Created new mod type for regular PAK mods and made the default type now more generic to support UE4SS.
+
+### Added
+
+- Created new installer for regular PAK mods
+
+### Changed
+
+- Changed default mod type to be installed to the root game folder instead of the PAK folder. This allows basic support for UE4SS or any other mod that doesn't involve movies or PAKs.
+
+### Fixed
+
 ## [0.2.10] - 2023-02-23
 
 Support mods that replace movie files in the `Phoenix/Content/Movies` folder. Also supports mods that contain both movie and pak files in the same archive. Added menu item to open the save game folder.

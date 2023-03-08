@@ -6,6 +6,7 @@ This is an extension for [Vortex](https://www.nexusmods.com/about/vortex/) to ad
 
 - Support for PAK-based mods
 - Support for BK2-based mods (movie files)
+- Support for UE4SS mods (experimental) 
 - Support for load order
 - Automatic game detection
 <!-- - Installation of archives which include more than one mod.
@@ -36,7 +37,9 @@ If your game lacks these files/folders then it is likely that your installation 
 
 # Mod Management
 
-Vortex will deploy files to the game's mod folder (`/Phoenix/Content/Paks/~mods`) and extracts all nested files in the archive to their own individual within this one, ignoring archive folder structure. Each mod folder will be prefixed based on the users load order set within Vortex. Any files that are overwritten are backed up for when the mod is disabled or removed.
+By default, Vortex will deploy files to the game's root folder and extracts the archive while preserving the folder structure.
+
+Vortex will deploy files to the game's mod folder (`/Phoenix/Content/Paks/~mods`) if only `.pak` files are detected and extracts all nested files in the archive to their own individual within this one, ignoring archive folder structure. Each mod folder will be prefixed based on the users load order set within Vortex. Any files that are overwritten are backed up for when the mod is disabled or removed.
 
 This extension also supports mods that overwrite the games movie files, located within subfolders under `/Phoenix/Content/Movies`. When a mod is added that contains at least 1 `.bk2` file, the `hogwarts-modtype-movies` installer is used. This searches through the movies folder within the game and attempts to match anything that matches inside of the mod archive. If found, Vortex overwrites them (after backing up the originals) and if any `pak` files are also found within a movie mod, then these are processed the same as a pak-only mod.
 
@@ -68,6 +71,19 @@ The load order section will also detect mods installed from the Steam Workshop a
 # Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.2.11] - 2023-03-08
+
+Created new mod type for regular PAK mods and made the default type now more generic to support UE4SS.
+
+### Added
+
+- Created new installer for regular PAK mods
+
+### Changed
+
+- Changed default mod type to be installed to the root game folder instead of the PAK folder. This allows experimental support for UE4SS or any other mod that doesn't involve movies or PAKs.
+
 
 ## [0.2.10] - 2023-02-23
 

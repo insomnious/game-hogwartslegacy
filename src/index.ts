@@ -258,8 +258,8 @@ async function TestForPakModType(
       i.source.toLowerCase().endsWith(".ue4sslogicmod") ||
       i.source.toLowerCase().endsWith(".logicmod"),
   );
-  // console.log('Pak mod?', !!excludeInstructions ? false : true);
-  return !excludeInstructions ? false : true;
+  console.log("Pak mod?", excludeInstructions ? false : true);
+  return excludeInstructions ? false : true;
 }
 
 function TestMerge(
@@ -795,7 +795,9 @@ async function SerializeLoadOrder(
 //#endregion
 
 async function setup(discovery: IDiscoveryResult) {
-  const absoluteModFolderPath = path.join(discovery.path!, MODSFOLDER_PATH);
+  if (discovery == undefined) return Promise.reject();
+
+  const absoluteModFolderPath = path.join(discovery.path, MODSFOLDER_PATH);
 
   try {
     // make sure the mod folder exists (! is for trusting that it won't be null)
@@ -861,7 +863,12 @@ function MakePrefixFromIndex(input: number): string {
     res = String.fromCharCode(65 + (rest % 25)) + res;
     rest = Math.floor(rest / 25);
   }
-  return util.pad(res as any, "A", 3);
+
+  const prefix = VortexUtils.pad(res, "A", 3);
+
+  console.log(prefix);
+
+  return prefix;
 }
 
 function GetVortexProperties(

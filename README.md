@@ -6,7 +6,7 @@ This is an extension for [Vortex](https://www.nexusmods.com/about/vortex/) to ad
 
 - Support for PAK-based mods
 - Support for BK2-based mods (movie files)
-- Support for UE4SS mods (experimental) 
+- Support for UE4SS mods (experimental)
 - Support for load order
 - Automatic game detection
 <!-- - Installation of archives which include more than one mod.
@@ -62,8 +62,7 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 # See also
 
-<!--- [Source Code (GitHub)](https://github.com/insomnious/game-halothemasterchiefcollection)-->
-
+- [Source Code (GitHub)](https://github.com/lordvoldem0rt/game-hogwartslegacy)
 - [Mods for Hogwarts Legacy (Nexus Mods)](https://www.nexusmods.com/hogwartslegacy)
 - [Download Vortex (Nexus Mods)](https://www.nexusmods.com/about/vortex/)
 - [Vortex Knowledge Base (Nexus Mods)](https://wiki.nexusmods.com/index.php/Category:Vortex)
@@ -72,7 +71,7 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.2.11] - 2023-03-08
+## [0.2.12] - 2023-03-07
 
 Created new mod type for regular PAK mods and made the default type now more generic to support UE4SS.
 
@@ -82,8 +81,7 @@ Created new mod type for regular PAK mods and made the default type now more gen
 
 ### Changed
 
-- Changed default mod type to be installed to the root game folder instead of the PAK folder. This allows experimental support for UE4SS or any other mod that doesn't involve movies or PAKs.
-
+- Changed default mod type to be installed to the root game folder instead of the PAK folder. This allows basic support for UE4SS or any other mod that doesn't involve movies or PAKs.
 
 ## [0.2.10] - 2023-02-23
 

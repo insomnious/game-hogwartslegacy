@@ -14,7 +14,7 @@ To be announced
 
 ### Fixed
 
-## [0.2.11] - 2023-03-07
+## [0.2.12] - 2023-03-07
 
 Created new mod type for regular PAK mods and made the default type now more generic to support UE4SS.
 

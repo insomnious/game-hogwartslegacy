@@ -737,8 +737,9 @@ async function DeserializeLoadOrder(
   // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
   const newMods = enabledModIds.filter(
     (id) =>
-      mods[id]?.type === "hogwarts-PAK-modtype" &&
-      filteredData.find((loEntry) => loEntry.id === id) === undefined,
+      ["hogwarts-PAK-modtype", "hogwarts-modtype-movies"].includes(
+        mods[id]?.type,
+      ) && filteredData.find((loEntry) => loEntry.id === id) === undefined,
   );
 
   // removed mods[id]?.type != "hogwarts-modtype-movies"

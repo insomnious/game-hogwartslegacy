@@ -1,6 +1,6 @@
 {
   "name": "hogwartslegacy",
-  "version": "0.2.12",
+  "version": "0.3.0",
   "description": "Vortex Extension for Hogwarts Legacy",
   "author": "lordvoldem0rt",
   "private": true,
@@ -44,5 +44,8 @@
     "vortex-ext-common": "^0.4.0",
     "webpack": "^5.57.1",
     "webpack-cli": "^4.8.0"
+  },
+  "dependencies": {
+    "react-bootstrap": "^0.33.0"
   }
 }

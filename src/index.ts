@@ -31,6 +31,7 @@ import * as VortexUtils from "./VortexUtils";
 import { ILoadOrderEntry, IProps, ISerializableData, LoadOrder } from "./types";
 import semver from "semver";
 import { migrate0_2_11 } from "./migration";
+import LuaModsLoadOrderPage from './views/LuaModsLoadOrderPage';
 
 // IDs for different stores and nexus
 const EPIC_ID = "fa4240e57a3c46b39f169041b7811293";
@@ -52,6 +53,9 @@ const MOVIES_EXTENSION = ".bk2";
 const PAK_EXTENSIONS = [".pak", ".utoc", ".ucas"];
 const MOVIESMOD_EXTENSIONS = PAK_EXTENSIONS.concat(MOVIES_EXTENSION);
 
+// Do not deploy these files
+const ignoreDeploy = ['enabled.txt'];
+
 // important that will be updated in main once function
 let CONTEXT: IExtensionContext;
 let API: IExtensionApi;
@@ -64,7 +68,7 @@ async function getGameVersion(discoveryPath: string) {
 
   try {
     const contents = await fs.readFileAsync(fullPath, { encoding: "utf8" });
-    console.log(contents);
+    // console.log(contents);
     return Promise.resolve(contents);
   } catch (error) {
     return Promise.reject(error);
@@ -79,11 +83,11 @@ async function OnWillDeploy(
   const profile: types.IProfile = selectors.activeProfile(state);
 
   /*
-  console.log("OnWillDeploy");
-  console.log(context);
-  console.log(willDeployEventArgs);
-  console.log(util.getSafe(state, ["persistent", "loadOrder", profile.id], []));
-  console.log("---");*/
+  // console.log("OnWillDeploy");
+  // console.log(context);
+  // console.log(willDeployEventArgs);
+  // console.log(util.getSafe(state, ["persistent", "loadOrder", profile.id], []));
+  // console.log("---");*/
 }
 
 function main(context: types.IExtensionContext) {
@@ -97,7 +101,7 @@ function main(context: types.IExtensionContext) {
 
     vortexEvents.onWillDeploy.subscribe(OnWillDeploy);
 
-    console.log("initialising the hogwarts extension! context.once()");
+    // console.log("initialising the hogwarts extension! context.once()");
   });
 
   // register a whole game, basic metadata and folder paths
@@ -125,6 +129,7 @@ function main(context: types.IExtensionContext) {
       ["SteamAppId"]: parseInt(STEAM_ID, 10),
       ["EpicAppId"]: EPIC_ID,
       stopPatterns: ["[^/]*\\.pak$"],
+      ignoreDeploy,
     },
     requiresLauncher: requiresLauncher,
   });
@@ -137,6 +142,18 @@ function main(context: types.IExtensionContext) {
       await SerializeLoadOrder(context, loadOrder, previousLoadOrder),
     toggleableEntries: false,
     usageInstructions: `Re-position entries by draging and dropping them - note that the mod further down the list will be loaded last and win any conflicts. Mods that replace the .bk2 video files located in ${MOVIESMOD_PATH} aren't affected, only PAK (and their associated) files are.`,
+  });
+
+  context.registerMainPage('highlight-lab', 'Lua Mods', LuaModsLoadOrderPage, {
+    id: `${GAME_ID}-lua-mods`,
+    group: 'per-game',
+    hotkey: 'U',
+    visible: () => {
+      const state = context.api.getState();
+      const activeGameId = selectors.activeGameId(state);
+      return (activeGameId === GAME_ID);
+    },
+    priority: 120
   });
 
   context.registerMigration((oldVer) => Migrate(context, oldVer));
@@ -190,7 +207,7 @@ function main(context: types.IExtensionContext) {
         console.warn(`discovery is undefined`);
       }
 
-      console.log(discovery);
+      // console.log(discovery);
 
       // because of course epic is using a different folder name to Steam to store save game data in
       const gameFolderName: string =
@@ -225,7 +242,7 @@ function GetMoviesModTypeRootPath(
   const state: IState = context.api.getState();
   const gamePath: string = state.settings.gameMode.discovered?.[game.id]?.path;
 
-  //console.log(`HOGWARTS: GetMovieFolderPath() ${path.join(gamePath, MOVIESFOLDER_PATH)}`);
+  //// console.log(`HOGWARTS: GetMovieFolderPath() ${path.join(gamePath, MOVIESFOLDER_PATH)}`);
 
   if (gamePath != undefined) return path.join(gamePath, MOVIESMOD_PATH);
   else return undefined;
@@ -235,7 +252,7 @@ function GetPakModsPath(context: IExtensionContext, game: IGame): string {
   const state: IState = context.api.getState();
   const gamePath: string = state.settings.gameMode.discovered?.[game.id]?.path;
 
-  //console.log(`HOGWARTS: GetMovieFolderPath() ${path.join(gamePath, MOVIESFOLDER_PATH)}`);
+  //// console.log(`HOGWARTS: GetMovieFolderPath() ${path.join(gamePath, MOVIESFOLDER_PATH)}`);
 
   if (gamePath != undefined) return path.join(gamePath, MODSFOLDER_PATH);
   else return undefined;
@@ -258,7 +275,7 @@ async function TestForPakModType(
       i.source.toLowerCase().endsWith(".ue4sslogicmod") ||
       i.source.toLowerCase().endsWith(".logicmod"),
   );
-  // console.log('Pak mod?', !!excludeInstructions ? false : true);
+  // // console.log('Pak mod?', !!excludeInstructions ? false : true);
   return !excludeInstructions ? false : true;
 }
 
@@ -307,9 +324,9 @@ async function DoMerge(
   const modId: string = relativeStagingPath.split(path.sep)[0]; //
   const targetPath: string = path.join(mergePath, relativePath); // the empty merged staging folder, plus the file and path from the archive
 
-  console.log(
-    `HOGWARTS: DoMerge() filePath=${filePath} mergePath=${mergePath} installPath=${installPath} relativeStagingPath=${relativeStagingPath} relativePath=${relativePath} targetPath=${targetPath} modId=${modId}`,
-  );
+  // console.log(
+  //   `HOGWARTS: DoMerge() filePath=${filePath} mergePath=${mergePath} installPath=${installPath} relativeStagingPath=${relativeStagingPath} relativePath=${relativePath} targetPath=${targetPath} modId=${modId}`,
+  // );
 
   // Retrieve the load order as stored in Vortex's application state.
   const loadOrder = util.getSafe(
@@ -318,14 +335,14 @@ async function DoMerge(
     [],
   );
 
-  //console.log(loadOrder);
+  //// console.log(loadOrder);
   // Find the mod entry in the load order state and insert the prefix in front
   //  of the mod's name/id/whatever
   //const loEntry: ILoadOrderEntry = loadOrder.find((loEntry) => loEntry.id === mod.id);
   const index: number = loadOrder.findIndex((loEntry) => loEntry.id === modId);
   const prefix: string = MakePrefixFromIndex(index);
 
-  //console.log(`HOGWARTS: DoMerge() index=${index} prefix=${prefix}`);
+  //// console.log(`HOGWARTS: DoMerge() index=${index} prefix=${prefix}`);
 
   // just in case?
   await fs.ensureDirWritableAsync(path.dirname(targetPath), () =>
@@ -334,9 +351,9 @@ async function DoMerge(
 
   // lets decide what to do with what file
   if (path.extname(filePath) == MOVIES_EXTENSION) {
-    console.log(
-      `HOGWARTS: DoMerge() this is a movie so I think it needs to go here... ${targetPath}`,
-    );
+    // console.log(
+    //   `HOGWARTS: DoMerge() this is a movie so I think it needs to go here... ${targetPath}`,
+    // );
 
     // hard link instead of actual copy seeing as we are just renaming and changing folders, not changing contents
     await fs.linkAsync(filePath, targetPath);
@@ -353,9 +370,9 @@ async function DoMerge(
       Promise.resolve(),
     );
 
-    console.log(
-      `HOGWARTS: DoMerge() this is a pak|utoc|ucas so I think it needs to go here... ${prefixedTargetPath}`,
-    );
+    // console.log(
+    //   `HOGWARTS: DoMerge() this is a pak|utoc|ucas so I think it needs to go here... ${prefixedTargetPath}`,
+    // );
 
     // hard link instead of actual copy seeing as we are just renaming and changing folders, not changing contents
     await fs.linkAsync(filePath, prefixedTargetPath);
@@ -385,12 +402,12 @@ async function TestForMoviesMod(
         path.extname(file).toLowerCase() == MOVIES_EXTENSION.toLowerCase(),
     ) != undefined;
 
-  console.log(`HOGWARTS: TestForMoviesMod() supported=${supported}`);
+  // console.log(`HOGWARTS: TestForMoviesMod() supported=${supported}`);
 
-  //console.log("does modinfo exist? " + (files.find((file) => path.basename(file).toLowerCase() == MODINFO_FILENAME.toLowerCase()) != undefined));
+  //// console.log("does modinfo exist? " + (files.find((file) => path.basename(file).toLowerCase() == MODINFO_FILENAME.toLowerCase()) != undefined));
 
-  //console.log(files);
-  //console.log(supported);
+  //// console.log(files);
+  //// console.log(supported);
 
   return Promise.resolve({
     supported,
@@ -404,7 +421,7 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   const state = context.api.getState();
   const discovery = state.settings.gameMode?.discovered[GAME_ID];
 
-  console.log(discovery);
+  // console.log(discovery);
   if (discovery == undefined) {
     Promise.reject("discovery is undefined");
   }
@@ -414,9 +431,9 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
   const paksPath = path.join(discovery.path, MODSFOLDER_PATH);
   const moviesPath = path.join(discovery.path, MOVIESMOD_PATH, "Movies");
 
-  console.log(
-    `HOGWARTS: InstallMoviesMod() gamePath=${gamePath} paksPath=${paksPath} moviesPath=${moviesPath} rootPath=${rootPath}`,
-  );
+  // console.log(
+  //   `HOGWARTS: InstallMoviesMod() gamePath=${gamePath} paksPath=${paksPath} moviesPath=${moviesPath} rootPath=${rootPath}`,
+  // );
 
   // Remove empty directories (if we don't, we get an error in Vortex as it can't process empty directories)
   const filtered = files.filter((file) => !file.endsWith(path.sep));
@@ -435,9 +452,9 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
     PAK_EXTENSIONS.includes(path.extname(file)),
   ); // add any of the pak, or associated, files
 
-  console.log("HOGWARTS: InstallMoviesMod() movies= paks=");
-  console.log(movies);
-  console.log(paks);
+  // console.log("HOGWARTS: InstallMoviesMod() movies= paks=");
+  // console.log(movies);
+  // console.log(paks);
 
   // we need to find where the originals are now kept to install. basically search through subfolders nested in /Movies and match file names
 
@@ -451,8 +468,8 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
     true,
   );
 
-  //console.log("HOGWARTS: InstallMoviesMod() foundFiles=");
-  //console.log(foundFiles);
+  //// console.log("HOGWARTS: InstallMoviesMod() foundFiles=");
+  //// console.log(foundFiles);
 
   //const matchedFiles = foundFiles.map((file) => path.basename(file));
 
@@ -471,11 +488,11 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
         path.basename(movieFile).toLowerCase(),
     );
 
-    console.log(
-      `HOGWARTS: InstallMoviesMod() Looking for ${path
-        .basename(movieFile)
-        .toLowerCase()}... foundFile=${foundFile}`,
-    );
+    // console.log(
+    //   `HOGWARTS: InstallMoviesMod() Looking for ${path
+    //     .basename(movieFile)
+    //     .toLowerCase()}... foundFile=${foundFile}`,
+    // );
 
     // if we have a found a matching original file, then add it as needing replacing in the instructions array
     if (foundFile != undefined) {
@@ -503,8 +520,8 @@ async function InstallMoviesMod(files: string[], context: IExtensionContext) {
     });
   }
 
-  console.log(`HOGWARTS: InstallMoviesMod() instructions=`);
-  console.log(instructions);
+  // console.log(`HOGWARTS: InstallMoviesMod() instructions=`);
+  // console.log(instructions);
 
   return Promise.resolve({ instructions });
 }
@@ -517,9 +534,9 @@ async function GetFilesInFolder(
   let files: string[] = [];
   const items = await fs.readdirAsync(folderPath); // this array is list is relative to dirName, not absolute
 
-  //console.log(`HOGWARTS: GetFileList() folderPath=${folderPath} relativeTo=${relativeTo}`);
-  //console.log("HOGWARTS: GetFileList() items=");
-  //console.log(items);
+  //// console.log(`HOGWARTS: GetFileList() folderPath=${folderPath} relativeTo=${relativeTo}`);
+  //// console.log("HOGWARTS: GetFileList() items=");
+  //// console.log(items);
 
   // loop through items in directory and get items (will be files and/or folders))
   for (const item of items) {
@@ -528,7 +545,7 @@ async function GetFilesInFolder(
 
     // if it's a folder we need to recursively search again. if it's a file, then we can add to the returning array
     if (await fs.isDirectoryAsync(absItemPath)) {
-      //console.log(`HOGWARTS: GetFileList() ${item} is a folder. Lets search inside of that`);
+      //// console.log(`HOGWARTS: GetFileList() ${item} is a folder. Lets search inside of that`);
 
       // if searching recursively, lets dig in deeper
       if (recursive != undefined) {
@@ -541,7 +558,7 @@ async function GetFilesInFolder(
       }
     } else {
       // if we've specified a relativeTo path, then lets try to remove the parts of the path we don't need
-      //console.log(`HOGWARTS: GetFileList() ${item} is a file. Lets add it`);
+      //// console.log(`HOGWARTS: GetFileList() ${item} is a file. Lets add it`);
       if (relativeTo != undefined && folderPath.indexOf(relativeTo) != -1) {
         // we've matched a full path to make relative, so lets remove it and use that as our final path
         const relativePath = folderPath.substring(
@@ -555,15 +572,15 @@ async function GetFilesInFolder(
     }
   }
 
-  //console.log(`HOGWARTS: GetFileList() ${folderPath} files=`);
-  //console.log(files);
+  //// console.log(`HOGWARTS: GetFileList() ${folderPath} files=`);
+  //// console.log(files);
 
   return Promise.resolve(files);
 }
 
 async function Migrate(context: IExtensionContext, oldVersion: string) {
   /*
-   * Performed on main thread, and not render thread, so we can't use usual console.log
+   * Performed on main thread, and not render thread, so we can't use usual // console.log
    */
 
   log("info", `Migrate oldVersion=${oldVersion}`);
@@ -635,11 +652,11 @@ async function Migrate(context: IExtensionContext, oldVersion: string) {
 }
 
 function MergeMods(mod: IMod, context: IExtensionContext): string {
-  console.log(`HOGWARTS: MergeMods id=${mod.id}`);
+  // console.log(`HOGWARTS: MergeMods id=${mod.id}`);
 
   const props: IProps = GetVortexProperties(context);
-  //console.log(props);
-  //console.log(mod);
+  //// console.log(props);
+  //// console.log(mod);
 
   // if props is undefined then we won't be able to check load order to get prefixes
   if (props == undefined) {
@@ -663,14 +680,14 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
   // so we return nothing and let our installer sort it out
   if (mod.type == "hogwarts-modtype-movies") {
     //return "ZZZZ-" + mod.id;
-    //console.log(mod);
+    //// console.log(mod);
     return "";
   }
 
-  //console.log("load order from application state");
-  //console.log(util.getSafe(props.state, ["persistent", "loadOrder", props.profile.id], []));
+  //// console.log("load order from application state");
+  //// console.log(util.getSafe(props.state, ["persistent", "loadOrder", props.profile.id], []));
 
-  //console.log(`HOGWARTS: End MergeMods id=${mod.id} installationPath=${mod.installationPath} index=${index} prefix=${prefix}`);
+  //// console.log(`HOGWARTS: End MergeMods id=${mod.id} installationPath=${mod.installationPath} index=${index} prefix=${prefix}`);
 
   // use prefix if it's found, if not, then use ZZZZ
   return prefix != undefined ? prefix + "-" + mod.id : "ZZZZ-" + mod.id;
@@ -683,7 +700,7 @@ function MergeMods(mod: IMod, context: IExtensionContext): string {
 async function DeserializeLoadOrder(
   context: types.IExtensionContext,
 ): Promise<types.LoadOrder> {
-  //console.log("HOGWARTS: DeserializeLoadOrder");
+  //// console.log("HOGWARTS: DeserializeLoadOrder");
 
   // get all the main vortex properties
   const props: IProps = GetVortexProperties(context);
@@ -694,7 +711,7 @@ async function DeserializeLoadOrder(
     props.profile.gameId,
     props.profile.id + "_" + LOADORDER_FILE,
   );
-  //console.log(`loadOrderPath=${loadOrderPath}`);
+  //// console.log(`loadOrderPath=${loadOrderPath}`);
 
   // get current state of the mods
   const currentModsState = util.getSafe(props.profile, ["modState"], {});
@@ -717,7 +734,7 @@ async function DeserializeLoadOrder(
     const fileData = await fs.readFileAsync(loadOrderPath, {
       encoding: "utf8",
     });
-    //console.log(fileData);
+    //// console.log(fileData);
 
     // try to parse loaded file into array of load order entry
     try {
@@ -765,7 +782,7 @@ async function SerializeLoadOrder(
   loadOrder: types.LoadOrder,
   previousLoadOrder: types.LoadOrder,
 ): Promise<void> {
-  console.log("HOGWARTS: SerializeLoadOrder");
+  // console.log("HOGWARTS: SerializeLoadOrder");
 
   const props: IProps = GetVortexProperties(context);
 
@@ -775,7 +792,7 @@ async function SerializeLoadOrder(
     props.profile.gameId,
     props.profile.id + "_" + LOADORDER_FILE,
   );
-  console.log(`loadOrderPath=${loadOrderPath}`);
+  // console.log(`loadOrderPath=${loadOrderPath}`);
 
   // write prefixed load order to file
   try {
@@ -807,7 +824,7 @@ async function setup(discovery: IDiscoveryResult) {
 }
 
 async function requiresLauncher(gamePath: string, store?: string) {
-  console.log(`requiresLauncher ${gamePath} ${store} {}`);
+  // console.log(`requiresLauncher ${gamePath} ${store} {}`);
 
   if (store === "steam") {
     return Promise.resolve({
@@ -833,7 +850,7 @@ async function requiresLauncher(gamePath: string, store?: string) {
 
 async function findGame() {
   //debugger;
-  //console.log("findGame()");
+  //// console.log("findGame()");
 
   try {
     const game: IGameStoreEntry = await util.GameStoreHelper.findByAppId([

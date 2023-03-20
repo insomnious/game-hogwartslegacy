@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Checkbox } from 'react-bootstrap';
 import { Toggle } from 'vortex-api';
 
 interface IProps {
@@ -18,15 +17,6 @@ function LuaModsLoadOrderEntry(props: IProps) {
         >
             {folderName}
         </Toggle>
-        {/*<Checkbox
-            id={folderName}
-            key={folderName}
-            checked={enabled}
-            onChange={() => null}
-            disabled={false}
-        >
-        {folderName}
-        </Checkbox>*/}
     </div>
     );
 }

@@ -1,19 +1,12 @@
 import path from "path";
-import React, { ComponentProps } from "react";
 import {
   actions,
-  FlexLayout,
   fs,
   log,
   selectors,
   types,
   util,
 } from "vortex-api";
-import { IDialogResult } from "vortex-api/lib/actions";
-import {
-  ILoadOrderGameInfo,
-  IValidationResult,
-} from "vortex-api/lib/types/api";
 import {
   IExtensionApi,
   IExtensionContext,
@@ -24,19 +17,22 @@ import {
 import { IGame } from "vortex-api/lib/types/IGame";
 import { IGameStoreEntry } from "vortex-api/lib/types/IGameStoreEntry";
 import { IDiscoveryResult, IMod, IState } from "vortex-api/lib/types/IState";
-import UnrealGameHelper from "vortex-ext-common";
+// import UnrealGameHelper from "vortex-ext-common";
 import { VortexCommands } from "./VortexCommands";
 import { VortexEvents, WillDeployEventArgs } from "./VortexEvents";
 import * as VortexUtils from "./VortexUtils";
-import { ILoadOrderEntry, IProps, ISerializableData, LoadOrder } from "./types";
+import { ILoadOrderEntry, IProps } from "./types";
 import semver from "semver";
 import { migrate0_2_11 } from "./migration";
+import { LuaModsMonitor, refreshLogicMods } from './util/luaModsUtil';
 import LuaModsLoadOrderPage from './views/LuaModsLoadOrderPage';
 
 // IDs for different stores and nexus
 const EPIC_ID = "fa4240e57a3c46b39f169041b7811293";
 const STEAM_ID = "990080";
 const GAME_ID = "hogwartslegacy";
+
+let monitor: LuaModsMonitor;
 
 const LOADORDER_FILE = "loadOrder.json";
 const EXECUTABLE = "HogwartsLegacy.exe"; // path to executable, relative to game root
@@ -231,6 +227,18 @@ function main(context: types.IExtensionContext) {
       // }
     },
   );
+
+  context.once(() => {
+    monitor = new LuaModsMonitor(context.api);
+    context.api.events.on('gamemode-activated', async (gameId) => gameId === GAME_ID ? monitor?.start() : monitor?.stop());
+    // Pause the monitor during deployment
+    context.api.events.on('will-deploy', (profileId, oldDeployment) => monitor.pause());
+    context.api.events.on('did-deploy', (profileId, newDeployment) => {
+      monitor.resume();
+      refreshLogicMods(context.api);
+    });
+    context.api.events.on('profile-did-change', (newProfileId) => null);
+  })
 
   return true;
 }

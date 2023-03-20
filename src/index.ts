@@ -26,6 +26,7 @@ import semver from "semver";
 import { migrate0_2_11 } from "./migration";
 import { LuaModsMonitor, refreshLogicMods } from './util/luaModsUtil';
 import LuaModsLoadOrderPage from './views/LuaModsLoadOrderPage';
+import { luaModReducer } from './reducers/luaReducer';
 
 // IDs for different stores and nexus
 const EPIC_ID = "fa4240e57a3c46b39f169041b7811293";
@@ -47,7 +48,7 @@ const VERSION_PATH = path.join(
 ); // relative to game root
 const MOVIES_EXTENSION = ".bk2";
 const PAK_EXTENSIONS = [".pak", ".utoc", ".ucas"];
-const MOVIESMOD_EXTENSIONS = PAK_EXTENSIONS.concat(MOVIES_EXTENSION);
+// const MOVIESMOD_EXTENSIONS = PAK_EXTENSIONS.concat(MOVIES_EXTENSION);
 
 // Do not deploy these files
 const ignoreDeploy = ['enabled.txt'];
@@ -152,6 +153,9 @@ function main(context: types.IExtensionContext) {
     priority: 120
   });
 
+  // Register State controls for LUA load order
+  context.registerReducer(['session', 'lualoadorder'], luaModReducer);
+
   context.registerMigration((oldVer) => Migrate(context, oldVer));
 
   context.registerModType(
@@ -232,12 +236,12 @@ function main(context: types.IExtensionContext) {
     monitor = new LuaModsMonitor(context.api);
     context.api.events.on('gamemode-activated', async (gameId) => gameId === GAME_ID ? monitor?.start() : monitor?.stop());
     // Pause the monitor during deployment
-    context.api.events.on('will-deploy', (profileId, oldDeployment) => monitor.pause());
-    context.api.events.on('did-deploy', (profileId, newDeployment) => {
+    context.api.events.on('will-deploy', () => monitor.pause());
+    context.api.events.on('did-deploy', () => {
       monitor.resume();
       refreshLogicMods(context.api);
     });
-    context.api.events.on('profile-did-change', (newProfileId) => null);
+    context.api.events.on('profile-did-change', () => null);
   })
 
   return true;

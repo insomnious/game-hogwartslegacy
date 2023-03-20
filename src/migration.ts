@@ -1,12 +1,12 @@
 import path from "path";
 import * as VortexUtils from "./VortexUtils";
-import { types, log, actions, fs, util, selectors } from "vortex-api";
+import { types, log, actions, fs, selectors } from "vortex-api";
 
 const GAME_ID = "hogwartslegacy";
 const MODSFOLDER_PATH = path.join("Phoenix", "Content", "Paks", "~mods");
 
 export async function migrate0_2_11(context: types.IExtensionContext, oldversion: string) {
-  log("info", "Migrating to 0.2.11");
+  log("info", "Migrating to 0.2.11", oldversion);
 
   const state = context.api.getState();
   const mods = state.persistent.mods[GAME_ID] ?? {};

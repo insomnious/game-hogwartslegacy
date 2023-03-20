@@ -1,12 +1,13 @@
 import path from 'path';
-import { fs, log, util, types } from 'vortex-api';
+import { fs, log, util, types, selectors } from 'vortex-api';
+import * as actions from '../actions/luaActions';
 
 interface ILuaMod {
     folderName: string;
     enabled: boolean;
 }
 
-export let logicMods: ILuaMod[] = util.makeReactive([]);
+// export let logicMods: ILuaMod[] = util.makeReactive([]);
 
 export class LuaModsMonitor {
     public watcher?: fs.FSWatcher;
@@ -103,7 +104,9 @@ export async function refreshLogicMods(api: types.IExtensionApi) {
         else return { folderName: f, enabled: true };
     });
 
-    logicMods = newLoadOrder;
+    const profile = selectors.activeProfile(api.getState())
+    api.store.dispatch(actions.setLuaLoadOrder(profile.id, newLoadOrder));
+    // logicMods = newLoadOrder;
 
     console.log('New load order', newLoadOrder);
 

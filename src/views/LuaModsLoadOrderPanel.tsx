@@ -6,18 +6,23 @@ import { types, selectors } from 'vortex-api';
 interface IStateWithLuaLoadOrder {
     session: {
         lualoadorder?: {
-            [key: string]: {folderName: string, enabled: boolean}[]
+            [key: string]: {
+                [key: string] : {
+                    enabled: boolean;
+                    index?: number;
+                }
+            }
         }
     }
 }
 
 function LogicModsLoadOrderPanel() {
     const profile = useSelector((state: types.IState) => selectors.activeProfile(state));
-    const logicMods = useSelector((state: IStateWithLuaLoadOrder) => state.session.lualoadorder?.[profile.id] || []);
+    const luaMods = useSelector((state: IStateWithLuaLoadOrder) => state.session.lualoadorder?.[profile.id] || {});
     
     return (
         <div>
-            {logicMods.map(LogicModsLoadOrderEntry)}
+            {Object.keys(luaMods).map((folderName: string) => LogicModsLoadOrderEntry({ folderName }))}
         </div>
     );
 }

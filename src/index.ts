@@ -24,7 +24,7 @@ import * as VortexUtils from "./VortexUtils";
 import { ILoadOrderEntry, IProps } from "./types";
 import semver from "semver";
 import { migrate0_2_11 } from "./migration";
-import { LuaModsMonitor, refreshLogicMods } from './util/luaModsUtil';
+import { LuaModsMonitor, refreshLogicMods, writeManifest } from './util/luaModsUtil';
 import LuaModsLoadOrderPage from './views/LuaModsLoadOrderPage';
 import { luaModReducer } from './reducers/luaReducer';
 
@@ -241,7 +241,20 @@ function main(context: types.IExtensionContext) {
       monitor.resume();
       refreshLogicMods(context.api);
     });
-    context.api.events.on('profile-did-change', () => null);
+    context.api.events.on('profile-did-change', (profileId: string) => {
+      context.api.onStateChange(['session', 'lualoadorder', profileId], (previous, current) => {
+        console.log('State change', { previous, current });
+        if (!previous) return;
+        const state = context.api.getState();
+        const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;
+        if (!gamePath) return;
+        const modsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods', 'Mods.txt');
+        monitor.pause();
+        writeManifest(current, modsPath)
+          .catch((err) => log('error', 'Could not write LUA manifest', err))
+          .finally(() => monitor.resume());
+      })
+    });
   })
 
   return true;

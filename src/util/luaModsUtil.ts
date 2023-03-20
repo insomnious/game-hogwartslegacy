@@ -7,7 +7,12 @@ interface ILuaMod {
     enabled: boolean;
 }
 
-// export let logicMods: ILuaMod[] = util.makeReactive([]);
+interface ILuaModLoadOrder {
+    [key: string]: {
+        enabled: boolean;
+        index?: number;
+    }
+}
 
 export class LuaModsMonitor {
     public watcher?: fs.FSWatcher;
@@ -15,7 +20,7 @@ export class LuaModsMonitor {
     private API: types.IExtensionApi;
     private updateDebouncer = new util.Debouncer(
         async (eventname: 'change' | 'rename', filename: string) => { this.fileChanged(eventname, filename) }, 
-        1000, 
+        2000, 
         true
     );
 
@@ -64,8 +69,8 @@ export class LuaModsMonitor {
 
     private async fileChanged(eventname: 'change' | 'rename', filename: string) {
         // Ignore events when we are editing the file.
-        console.log('File event', { eventname, filename });
         if (this.paused === true) return;
+        // console.log('File event', { eventname, filename });
         if (filename.toLowerCase() !== 'mods.txt') return;
         return refreshLogicMods(this.API);
     }
@@ -73,17 +78,20 @@ export class LuaModsMonitor {
 
 export async function refreshLogicMods(api: types.IExtensionApi) {
     const state = api.getState();
+    const profile = selectors.activeProfile(api.getState());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stateLoadOrder = (state.session as any).lualoadorder?.[profile.id] || [];
     const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;
     if (!gamePath) {
         log('error', 'Error getting game path');
         api.showErrorNotification('Could not refresh logic mods', 'Unable to locate Hogwarts Legacy install folder.');
         return;
     }
-    const logicModsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
+    const luaModsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
     // Get a list of folders.
     let folderList = [];
     try {
-        folderList = await getFolders(logicModsPath);
+        folderList = await getFolders(luaModsPath);
     }
     catch(err) {
         log('error', 'Could not refresh logic mods', err);
@@ -91,28 +99,34 @@ export async function refreshLogicMods(api: types.IExtensionApi) {
     // Parse the Mods.txt file and filter out any missing entries.
     let savedLoadOrder = [];
     try {
-        savedLoadOrder = (await parseManifest(path.join(logicModsPath, 'Mods.txt')))
+        savedLoadOrder = (await parseManifest(path.join(luaModsPath, 'Mods.txt')))
         .filter(entry => !!folderList.find(f => f.toLowerCase() === entry.folderName.toLowerCase()));
     }
     catch(err) {
         log('error', 'Could not get mods.txt data', err);
     }
-    // Interate over the folders and map them into load order entries.
-    const newLoadOrder: ILuaMod[] = folderList.map(f => {
-        const existing = savedLoadOrder.find(e => e.folderName.toLowerCase() === f.toLowerCase());
-        if (existing) return existing;
-        else return { folderName: f, enabled: true };
-    });
+    // Find any new mods
+    const newEntries: ILuaMod[] = folderList.filter(f => !savedLoadOrder.find(e => e.folderName.toLowerCase() === f.toLowerCase()))
+    .map(m => ({ enabled: true, folderName: m, index: -1 }));
+    // Combine and index
+    const newLoadOrder = [...savedLoadOrder, ...newEntries].map((entry, index) => ({ ...entry, index }));
 
-    const profile = selectors.activeProfile(api.getState())
-    api.store.dispatch(actions.setLuaLoadOrder(profile.id, newLoadOrder));
-    // logicMods = newLoadOrder;
+    const loadOrderObject: ILuaModLoadOrder = newLoadOrder.reduce((prev, cur, index) => {
+        prev[cur.folderName] = { enabled: cur.enabled, index };
+        return prev;
+    }, {});
 
-    console.log('New load order', newLoadOrder);
-
-    await writeManifest(newLoadOrder, path.join(logicModsPath, 'mods1.txt'))
-
+    if (hasLoadOrderChanged(stateLoadOrder, loadOrderObject)) {
+        api.store.dispatch(actions.setLuaLoadOrder(profile.id, loadOrderObject));
+    }
     return newLoadOrder;
+}
+
+function hasLoadOrderChanged(oldLo: ILuaModLoadOrder, newLo: ILuaModLoadOrder): boolean {
+    const oldString = JSON.stringify(oldLo);
+    const newString = JSON.stringify(newLo);
+    if (oldString == newString) return false;
+    else return true;
 }
 
 async function getFolders(modsPath: string): Promise<string[]> {
@@ -142,8 +156,8 @@ async function parseManifest(filePath: string): Promise<ILuaMod[]> {
     // Split into an array by new line, remove comments and blank lines
     try {
         const data = await fs.readFileAsync(filePath, { encoding: 'utf8' });
-        const entries = data.split('\r\n').filter(l => l !== '' && !l.startsWith(';'));
-        const mods = entries.reduce((prev, e) => {
+        const entries = data.split('\n').filter(l => l !== '' && !l.startsWith(';')).map(l => l.trim());
+        const mods = entries.reduce((prev, e, index) => {
             const text = e.trim()
             const enabledNumber: number | typeof NaN = parseInt(text.slice(-1));
             const folderName = text.substring(0, text.lastIndexOf(':')).trim();
@@ -151,7 +165,7 @@ async function parseManifest(filePath: string): Promise<ILuaMod[]> {
                 log('warn', 'Invalid logic mod entry', e);
                 return prev;
             };
-            prev.push({ folderName, enabled: enabledNumber === 1 ? true : false });
+            prev.push({ folderName, enabled: enabledNumber === 1 ? true : false, index });
             return prev;        
         }, []);
         return mods;
@@ -162,10 +176,16 @@ async function parseManifest(filePath: string): Promise<ILuaMod[]> {
     }
 }
 
-async function writeManifest(loadOrder: ILuaMod[], filePath: string) {
-    const loFiltered = loadOrder.filter(l => !['shared', 'keybinds'].includes(l.folderName.toLowerCase()));
+export async function writeManifest(loadOrder: ILuaModLoadOrder, filePath: string) {
+    console.trace('Writing manifest')
+    const loFiltered = Object.keys(loadOrder).reduce((prev, cur) => {
+        if (!['shared', 'keybinds'].includes(cur.toLowerCase())) {
+            prev.push({ folderName: cur, enabled: loadOrder[cur].enabled, index: loadOrder[cur].index || 999 })
+        }
+        return prev;
+    }, []).sort((a,b) => a.index >= b.index ? 1 : -1);
     const data = loFiltered.map(e => `${e.folderName} : ${e.enabled ? 1 : 0}`).join('\n');
-    const keybindsEnabled = loadOrder.find(l => l.folderName.toLowerCase() === 'keybinds')?.enabled || false;
+    const keybindsEnabled = loadOrder[Object.keys(loadOrder).find(k => k.toLowerCase() === 'keybinds')]?.enabled || false;
     const document = `; Lua Mods Load order generated by Vortex\r\n${data}\r\n\r\n; Built-in keybinds, do not move up!\r\nKeybinds : ${keybindsEnabled ? 1 : 0}`;
     try {
         await fs.writeFileAsync(filePath, document);

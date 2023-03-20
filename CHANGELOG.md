@@ -10,9 +10,13 @@ To be announced
 
 ### Added
 
+- Added support for Lua mods
+
 ### Changed
 
 ### Fixed
+
+- Fixed bug with 'Open Save Folder...' menu action being visible when managing other games. 
 
 ## [0.2.12] - 2023-03-07
 

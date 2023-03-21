@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { MainPage, IconBar, ToolbarIcon, FlexLayout, MainContext, types } from 'vortex-api';
 import { Panel } from 'react-bootstrap';
-import { refreshLogicMods } from '../util/luaModsUtil';
+import { refreshLuaMods, openLuaModsFolder } from '../util/luaModsUtil';
 import LuaModsLoadOrderInfo from './LuaModsLoadOrderInfo';
 import LuaModsLoadOrderPanel from './LuaModsLoadOrderPanel';
 
@@ -21,7 +21,19 @@ function LuaModsLoadOrderPage(): JSX.Element {
                     key: 'btn-refresh-logic-mods',
                     icon: 'refresh',
                     text: 'Refresh',
-                    onClick: () => refreshLogicMods(context.api)
+                    onClick: () => refreshLuaMods(context.api)
+                }
+            }
+        },
+        {
+            component: ToolbarIcon,
+            props: () => {
+                return {
+                    id: 'btn-browse-logic-mods',
+                    key: 'btn-browse-logic-mods',
+                    icon: 'open-ext',
+                    text: 'Open Folder',
+                    onClick: () => openLuaModsFolder(context.api)
                 }
             }
         }

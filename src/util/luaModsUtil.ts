@@ -72,11 +72,24 @@ export class LuaModsMonitor {
         if (this.paused === true) return;
         // console.log('File event', { eventname, filename });
         if (filename.toLowerCase() !== 'mods.txt') return;
-        return refreshLogicMods(this.API);
+        return refreshLuaMods(this.API);
     }
 }
 
-export async function refreshLogicMods(api: types.IExtensionApi) {
+export async function openLuaModsFolder(api: types.IExtensionApi) {
+    const state = api.getState();
+    const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;
+    if (!gamePath) return api.showErrorNotification('Could not open Lua Mods Folder', 'Hogwarts Legacy is not properly installed');
+    const luaModsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
+    try {
+        util.opn(luaModsPath);
+    }
+    catch(err) {
+        log('error', 'Could not open Lua Mods Folder', { luaModsPath, err });
+    }
+}
+
+export async function refreshLuaMods(api: types.IExtensionApi) {
     const state = api.getState();
     const profile = selectors.activeProfile(api.getState());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -180,7 +193,7 @@ export async function writeManifest(loadOrder: ILuaModLoadOrder, filePath: strin
     console.trace('Writing manifest')
     const loFiltered = Object.keys(loadOrder).reduce((prev, cur) => {
         if (!['shared', 'keybinds'].includes(cur.toLowerCase())) {
-            prev.push({ folderName: cur, enabled: loadOrder[cur].enabled, index: loadOrder[cur].index || 999 })
+            prev.push({ folderName: cur, enabled: loadOrder[cur].enabled, index: loadOrder[cur].index ?? 999 })
         }
         return prev;
     }, []).sort((a,b) => a.index >= b.index ? 1 : -1);

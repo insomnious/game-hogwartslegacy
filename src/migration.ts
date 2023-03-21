@@ -27,7 +27,12 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
       return;
     }
     const modsFolder = path.join(gamePath, MODSFOLDER_PATH);
-    await context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsFolder);
+    await context.api.emitAndAwait(
+      "purge-mods-in-path",
+      GAME_ID,
+      "",
+      modsFolder,
+    );
   } catch (err) {
     log("error", "Failed to clean up ~mods folder for Hogwarts Legacy", err);
   }
@@ -35,7 +40,9 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
   // Reset the load order by deleting the JSON file.
   try {
     const loadorderPath = path.join(VortexUtils.GetUserDataPath(), GAME_ID);
-    const loFiles = (await fs.readdirAsync(loadorderPath)).filter((f) => f.endsWith("loadOrder.json"));
+    const loFiles = (await fs.readdirAsync(loadorderPath)).filter((f) =>
+      f.endsWith("loadOrder.json"),
+    );
     for (const file of loFiles) {
       log("debug", "Removing LO file");
       await fs.unlinkAsync(path.join(loadorderPath, file));
@@ -58,7 +65,7 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
           f.toLowerCase().endsWith(".lua") ||
           f.toLowerCase().endsWith("ue4sslogicmod.info") ||
           f.toLowerCase().endsWith(".ue4sslogicmod") ||
-          f.toLowerCase().endsWith(".logicmod")
+          f.toLowerCase().endsWith(".logicmod"),
       );
       // If exception files, skip.
       if (exceptions) continue;

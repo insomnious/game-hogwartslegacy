@@ -42,3 +42,9 @@ export function GetApplicationPath(): string {
 export function GetTempPath(): string {
   return util.getVortexPath("temp");
 }
+
+export function pad(value: string, padding: string, width: number) {
+  return value.length >= width
+    ? value
+    : new Array(width - value.length + 1).join(padding) + value;
+}

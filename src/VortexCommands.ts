@@ -1,4 +1,8 @@
-import { IExtensionApi, IExtensionContext, IModInfo } from "vortex-api/lib/types/api";
+import {
+  IExtensionApi,
+  IExtensionContext,
+  IModInfo,
+} from "vortex-api/lib/types/api";
 import { RedownloadMode } from "vortex-api/lib/extensions/download_management/DownloadManager";
 
 /**
@@ -28,16 +32,25 @@ export class VortexCommands {
     // test wrapper around the vortex api command just to get a better async function but without older style callback functions
 
     return new Promise((resolve, reject) => {
-      this._context.api.events.emit("purge-mods", allowFallback, (error: Error) => {
-        if (error) {
-          console.error("Vortex_PurgeModsAsync Error " + error);
-          reject();
-        }
-      });
+      this._context.api.events.emit(
+        "purge-mods",
+        allowFallback,
+        (error: Error) => {
+          if (error) {
+            console.error("Vortex_PurgeModsAsync Error " + error);
+            reject();
+          }
+        },
+      );
     });
   }
 
-  public async StartDownloadAsync(url: string, modInfo: IModInfo, fileName: string, redownload: RedownloadMode): Promise<string> {
+  public async StartDownloadAsync(
+    url: string,
+    modInfo: IModInfo,
+    fileName: string,
+    redownload: RedownloadMode,
+  ): Promise<string> {
     // test wrapper around the vortex api command just to get a better async function but without older style callback functions
 
     return new Promise((resolve, reject) => {
@@ -56,7 +69,7 @@ export class VortexCommands {
           console.log("Vortex_StartDownloadAsync Complete id=" + id);
           resolve(id);
         },
-        redownload
+        redownload,
       );
     });
   }

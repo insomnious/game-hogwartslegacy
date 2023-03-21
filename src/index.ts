@@ -192,15 +192,16 @@ function main(context: types.IExtensionContext) {
       const discovery: types.IDiscoveryResult =
         state.settings.gameMode.discovered?.[GAME_ID];
 
-      if (discovery?.store == undefined) {
-        console.warn(`discovery is undefined`);
+      if (discovery == undefined) {
+        //console.warn(`discovery is undefined`);
+        return;
       }
 
-      // console.log(discovery);
+      //console.log("discovery", discovery);
 
       // because of course epic is using a different folder name to Steam to store save game data in
       const gameFolderName: string =
-        discovery.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
+        discovery?.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
       const saveGameFolderPath: string = path.join(
         VortexUtils.GetLocalAppDataPath(),
         gameFolderName,
@@ -213,11 +214,7 @@ function main(context: types.IExtensionContext) {
       } catch (error) {
         console.warn(`${error}`);
         return;
-      }
-      // } catch (error) {
-      //    console.warn(`${saveGameFolderPath} doesn't exist`);
-      //return;
-      // }
+      }      
     },
     () => selectors.activeGameId(context.api.getState()) === GAME_ID,
   );
@@ -324,7 +321,7 @@ async function DeserializeLoadOrder(
     }
   } catch (error) {
     // file doesn't exist
-    console.warn(error);
+    //console.warn(error);
   }
 
   // User may have disabled/removed a mod from the mods page - we need to filter out any existing
@@ -439,7 +436,7 @@ async function findGame() {
     ]);
     return Promise.resolve(game.gamePath);
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     return Promise.reject(error);
   }
 

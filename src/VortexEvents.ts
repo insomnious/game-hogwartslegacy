@@ -1,5 +1,13 @@
-import { SignalDispatcher, SimpleEventDispatcher, EventDispatcher } from "strongly-typed-events";
-import { IDeployedFile, IExtensionApi, IExtensionContext } from "vortex-api/lib/types/api";
+import {
+  SignalDispatcher,
+  SimpleEventDispatcher,
+  EventDispatcher,
+} from "strongly-typed-events";
+import {
+  IDeployedFile,
+  IExtensionApi,
+  IExtensionContext,
+} from "vortex-api/lib/types/api";
 
 export interface WillDeployEventArgs {
   profileId: string;
@@ -11,8 +19,14 @@ export interface WillDeployEventArgs {
  * Events can be subscribed/unsubscribed to via .subscribe and .unsubscribe functions
  */
 export class VortexEvents {
-  private _onGameModeActivated = new EventDispatcher<IExtensionContext, string>();
-  private _onWillDeploy = new EventDispatcher<IExtensionContext, WillDeployEventArgs>();
+  private _onGameModeActivated = new EventDispatcher<
+    IExtensionContext,
+    string
+  >();
+  private _onWillDeploy = new EventDispatcher<
+    IExtensionContext,
+    WillDeployEventArgs
+  >();
   //private _api:IExtensionApi;
 
   constructor(context: IExtensionContext) {
@@ -20,9 +34,15 @@ export class VortexEvents {
     const _context = context;
 
     // listen for vortex event so we can refire
-    context.api.events.on("gamemode-activated", async (gameMode: string) => this._onGameModeActivated.dispatch(context, gameMode));
-    context.api.events.on("will-deploy", async (profileId: string, oldDeployment: Record<string, IDeployedFile[]>) =>
-      this._onWillDeploy.dispatch(context, { profileId, oldDeployment })
+    context.api.events.on("gamemode-activated", async (gameMode: string) =>
+      this._onGameModeActivated.dispatch(context, gameMode),
+    );
+    context.api.events.on(
+      "will-deploy",
+      async (
+        profileId: string,
+        oldDeployment: Record<string, IDeployedFile[]>,
+      ) => this._onWillDeploy.dispatch(context, { profileId, oldDeployment }),
     );
   }
 

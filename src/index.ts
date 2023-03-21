@@ -230,6 +230,7 @@ function main(context: types.IExtensionContext) {
       //return;
       // }
     },
+    () => selectors.activeGameId(context.api.getState()) === GAME_ID,
   );
 
   context.once(() => {
@@ -247,18 +248,36 @@ function main(context: types.IExtensionContext) {
       refreshLuaMods(context.api);
     });
     context.api.events.on('profile-did-change', (profileId: string) => {
-      context.api.onStateChange(['session', 'lualoadorder', profileId], (previous, current) => {
-        // console.log('State change', { previous, current });
-        if (!previous) return;
-        const state = context.api.getState();
-        const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;
-        if (!gamePath) return;
-        const modsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods', 'Mods.txt');
-        monitor.pause();
-        writeManifest(current, modsPath)
-          .catch((err) => log('error', 'Could not write LUA manifest', err))
-          .finally(() => monitor.resume());
-      })
+      const state = context.api.getState();
+      const profile = selectors.profileById(state, profileId);
+      // Do nothing if this isn't hogwarts!
+      if (profile.gameId !== GAME_ID) return;
+      // When the actual profile change happens
+      refreshLuaMods(context.api);
+    });
+
+    // When the loadorder changes, update the manifest on disk.
+    context.api.onStateChange(['session', 'lualoadorder'], (previous, current) => {
+      // Get game and profile info.
+      const state = context.api.getState();
+      const gameId = selectors.activeGameId(state);
+      const profile = selectors.activeProfile(state);
+      // Not Hogwarts of we swapped to an invalid profile.
+      if (gameId !== GAME_ID || !profile) return;
+      // Get the actual load orders to compare.
+      const prevLoadOrder = previous[profile.id];
+      const currLoadOrder = current[profile.id];
+      // If there's no previous state, we've probably just loaded it from the disk. Also ignore identical states.
+      if (!prevLoadOrder || (prevLoadOrder === currLoadOrder)) return;
+      // Get the path to the Mods.txt file.
+      const gamePath: string | undefined = state.settings.gameMode.discovered[GAME_ID]?.path || undefined;
+      if (!gamePath) return;
+      const modsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods', 'Mods.txt');
+      // Stop monitoring the mods.txt file, write the new manifest, resume the monitor.
+      monitor.pause();
+      writeManifest(currLoadOrder, modsPath)
+        .catch((err) => log('error', 'Could not write LUA manifest', err))
+        .finally(() => monitor.resume());
     });
   })
 

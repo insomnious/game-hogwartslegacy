@@ -1,11 +1,10 @@
 import path from "path";
 import * as VortexUtils from "./VortexUtils";
-import { types, log, actions, fs, selectors } from "vortex-api";
+import { types, log, actions, fs, selectors, util } from "vortex-api";
+import { GAME_ID, MODSFOLDER_PATH } from './common';
+import semver from "semver";
 
-const GAME_ID = "hogwartslegacy";
-const MODSFOLDER_PATH = path.join("Phoenix", "Content", "Paks", "~mods");
-
-export async function migrate0_2_11(context: types.IExtensionContext, oldversion: string) {
+async function migrate0_2_11(context: types.IExtensionContext, oldversion: string) {
   log("info", "Migrating to 0.2.11", oldversion);
 
   const state = context.api.getState();
@@ -71,4 +70,77 @@ export async function migrate0_2_11(context: types.IExtensionContext, oldversion
       log("error", `Error checking mod ${mod.id}`, err);
     }
   }
+}
+
+export default async function Migrate(context: types.IExtensionContext, oldVersion: string) {
+  /*
+   * Performed on main thread, and not render thread, so we can't use usual // console.log
+   */
+
+  log("info", `Migrate oldVersion=${oldVersion}`);
+
+  if (semver.lt(oldVersion, "0.2.11")) {
+    try {
+      await migrate0_2_11(context, oldVersion);
+    } catch (err) {
+      log("error", "Failed to migrate Hogwarts Legacy to 0.2.11");
+    }
+  }
+
+  // if old version is newer than or equal to this version, then we just ignore
+  if (semver.gte(oldVersion, "0.2.10")) {
+    log("info", "No need to migrate");
+    return Promise.resolve();
+  }
+
+  const state = context.api.getState();
+  const discoveryPath = util.getSafe(
+    state,
+    ["settings", "gameMode", "discovered", GAME_ID, "path"],
+    undefined,
+  );
+
+  if (discoveryPath === undefined) {
+    log("warn", "discoveryPath is undefined");
+    return Promise.resolve();
+  }
+
+  const mods: { [modId: string]: types.IMod } = util.getSafe(
+    state,
+    ["persistent", "mods", GAME_ID],
+    {},
+  );
+  if (Object.keys(mods).length === 0) {
+    log("info", "mods length is 0 so no reason to migrate anything");
+    return Promise.resolve();
+    3283;
+  }
+
+  const modsPath = path.join(discoveryPath, MODSFOLDER_PATH);
+
+  log("info", `modsPath=${modsPath}`);
+
+  context.api.sendNotification({
+    type: "info",
+    message:
+      "The Hogwarts Legacy Extension has been updated. If you previously installed a mod modifying movie files (e.g. paintings) then there is a good chance that they haven't been working as those type of mods weren't officially supported. If this is the case then please reinstall those individual mods.",
+  });
+
+  return context.api
+    .awaitUI()
+    .then(() => fs.ensureDirWritableAsync(modsPath))
+    .then(() =>
+      context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath),
+    )
+    .then(() =>
+      context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)),
+    );
+
+  // migration needs to happen as we are upgrading
+
+  // purge mods?
+  //await vortexCommands.PurgeModsAsync(true);
+
+  // deploy mods?
+  //await vortexCommands.DeployModsAsync();
 }

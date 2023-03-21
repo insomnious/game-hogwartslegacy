@@ -24,14 +24,14 @@ function LogicModsLoadOrderPanel() {
         return (
             <div style={{textAlign: 'center'}} className='placeholder'>
                 <Icon name='in-progress' className='placeholder-icon'/>
-                <div className='placholder-text'>No Lua Mods installed</div>
+                <div className='placeholder-text'>No Lua Mods installed</div>
             </div>
         )
     }
     
     return (
         <div>
-            {Object.keys(luaMods).map((folderName: string) => LogicModsLoadOrderEntry({ folderName }))}
+            {Object.keys(luaMods).map((folderName: string) => <LogicModsLoadOrderEntry folderName={folderName} />)}
         </div>
     );
 }

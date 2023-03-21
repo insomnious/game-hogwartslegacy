@@ -237,7 +237,12 @@ function main(context: types.IExtensionContext) {
     context.api.events.on('gamemode-activated', async (gameId) => gameId === GAME_ID ? monitor?.start() : monitor?.stop());
     // Pause the monitor during deployment
     context.api.events.on('will-deploy', () => monitor.pause());
+    context.api.events.on('will-purge', () => monitor.pause());
     context.api.events.on('did-deploy', () => {
+      monitor.resume();
+      refreshLuaMods(context.api);
+    });
+    context.api.events.on('did-purge', () => {
       monitor.resume();
       refreshLuaMods(context.api);
     });

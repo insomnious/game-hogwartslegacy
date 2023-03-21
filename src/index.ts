@@ -24,7 +24,7 @@ import * as VortexUtils from "./VortexUtils";
 import { ILoadOrderEntry, IProps } from "./types";
 import semver from "semver";
 import { migrate0_2_11 } from "./migration";
-import { LuaModsMonitor, refreshLogicMods, writeManifest } from './util/luaModsUtil';
+import { LuaModsMonitor, refreshLuaMods, writeManifest } from './util/luaModsUtil';
 import LuaModsLoadOrderPage from './views/LuaModsLoadOrderPage';
 import { luaModReducer } from './reducers/luaReducer';
 
@@ -239,11 +239,11 @@ function main(context: types.IExtensionContext) {
     context.api.events.on('will-deploy', () => monitor.pause());
     context.api.events.on('did-deploy', () => {
       monitor.resume();
-      refreshLogicMods(context.api);
+      refreshLuaMods(context.api);
     });
     context.api.events.on('profile-did-change', (profileId: string) => {
       context.api.onStateChange(['session', 'lualoadorder', profileId], (previous, current) => {
-        console.log('State change', { previous, current });
+        // console.log('State change', { previous, current });
         if (!previous) return;
         const state = context.api.getState();
         const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;

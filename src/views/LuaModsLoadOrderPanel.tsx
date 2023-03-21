@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import LogicModsLoadOrderEntry from './LuaModsLoadOrderEntry';
-import { types, selectors } from 'vortex-api';
+import { types, selectors, Icon } from 'vortex-api';
 
 interface IStateWithLuaLoadOrder {
     session: {
@@ -19,6 +19,15 @@ interface IStateWithLuaLoadOrder {
 function LogicModsLoadOrderPanel() {
     const profile = useSelector((state: types.IState) => selectors.activeProfile(state));
     const luaMods = useSelector((state: IStateWithLuaLoadOrder) => state.session.lualoadorder?.[profile.id] || {});
+
+    if (!Object.keys(luaMods).length) {
+        return (
+            <div style={{textAlign: 'center'}} className='placeholder'>
+                <Icon name='in-progress' className='placeholder-icon'/>
+                <div className='placholder-text'>No Lua Mods installed</div>
+            </div>
+        )
+    }
     
     return (
         <div>

@@ -14,6 +14,21 @@ To be announced
 
 ### Fixed
 
+## [0.3.0] - 2023-03-22
+
+Expanded support for Lua mods and ability to enable/disable inside of Vortex. Refactored code and some bug fixes.
+
+### Added
+
+- New page to enable/disable Lua mods
+
+### Changed
+
+### Fixed
+
+- Fixed bug with 'Open Save Folder...' menu action being visible when managing other games. 
+- Refactored code and fixed some eslint issues
+
 ## [0.2.11] - 2023-03-07
 
 Created new mod type for regular PAK mods and made the default type now more generic to support UE4SS.

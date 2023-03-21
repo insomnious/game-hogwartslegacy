@@ -6,7 +6,7 @@ This is an extension for [Vortex](https://www.nexusmods.com/about/vortex/) to ad
 
 - Support for PAK-based mods
 - Support for BK2-based mods (movie files)
-- Support for UE4SS mods (experimental) 
+- Support for UE4SS\Lua mods (experimental) 
 - Support for load order
 - Automatic game detection
 <!-- - Installation of archives which include more than one mod.
@@ -71,6 +71,21 @@ The load order section will also detect mods installed from the Steam Workshop a
 # Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.3.0] - 2023-03-22
+
+Expanded support for Lua mods and ability to enable/disable inside of Vortex. Refactored code and some bug fixes.
+
+### Added
+
+- New page to enable/disable Lua mods
+
+### Changed
+
+### Fixed
+
+- Fixed bug with 'Open Save Folder...' menu action being visible when managing other games. 
+- Refactored code and fixed some eslint issues
 
 ## [0.2.11] - 2023-03-08
 

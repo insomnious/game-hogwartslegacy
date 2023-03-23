@@ -25,6 +25,7 @@ import {
 
 // Abstract away a lot of the code for specific features into their own classes.
 import HogwartsMovieInstaller from './installers/hogwarts-installer-movies';
+import HogwartsBluePrintOrLuaInstaller from './installers/hogwarts-installer-bp-lua';
 import HogwartsMovieModType from './modtypes/hogwarts-modtype-movies';
 import HogwartsPAKModType from './modtypes/hogwarts-PAK-modtype';
 import HogwartsMovieMerger from './merges/movies-merge';
@@ -170,6 +171,13 @@ function main(context: types.IExtensionContext) {
     90,
     HogwartsMovieInstaller.test,
     (files) => HogwartsMovieInstaller.install(files, context),
+  );
+  
+  context.registerInstaller(
+    "hogwarts-installer-bp-lua", 
+    90, 
+    HogwartsBluePrintOrLuaInstaller.test, 
+    HogwartsBluePrintOrLuaInstaller.install
   );
 
   context.registerMerge(

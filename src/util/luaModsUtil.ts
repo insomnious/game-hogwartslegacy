@@ -36,19 +36,43 @@ export class LuaModsMonitor {
         const discoveryPath = state.settings.gameMode.discovered['hogwartslegacy']?.path ?? undefined;
         if (!discoveryPath) throw new Error('Hogwarts Legacy is not discovered!');
         const luaModsPath = path.join(discoveryPath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
+
         // Check it exists
         try {
             await fs.statAsync(luaModsPath);
             // Set up the watcher
             this.watcher = fs.watch(
-                luaModsPath, 
+                luaModsPath,
                 (eventname: 'change' | 'rename', filename: string) => this.updateDebouncer.schedule(undefined, eventname, filename)
             );
-        }
+
+            // keep an eye out for errors
+            this.watcher.on('error', async (error) => {
+                
+                // if this is permission error, it may well be when we purge
+                if(error.message.startsWith('EPERM')) {
+
+                    // check to see if lua mods folder exists, if it doesn't (expected) then just debug it
+                    try{                        
+                        await fs.statAsync(luaModsPath); 
+                        log('error', error.message);
+                    } catch {
+                        log('debug', error.message);
+                    }
+
+                } else {
+                    // any other error just catch and log in vortex
+                    log('error', error.message);
+                }                
+            });
+        }   
         catch(err) {
             if (err.code === 'ENOENT') log('debug', 'Lua mods folder does not exist yet.');
             else log('warn', 'Could not monitor lua mods folder', err);
         }
+
+        
+
     }
 
     stop() {

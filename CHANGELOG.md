@@ -14,6 +14,14 @@ To be announced
 
 ### Fixed
 
+## [0.3.1] - 2023-03-23
+
+Bug fixes
+
+### Fixed
+
+- Fixes potential file permission error when purging Lua mods.  
+
 ## [0.3.0] - 2023-03-22
 
 Expanded support for Lua mods and ability to enable/disable inside of Vortex. Refactored code and some bug fixes.
@@ -21,8 +29,6 @@ Expanded support for Lua mods and ability to enable/disable inside of Vortex. Re
 ### Added
 
 - New page to enable/disable Lua mods
-
-### Changed
 
 ### Fixed
 

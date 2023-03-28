@@ -94,7 +94,7 @@ export class LuaModsMonitor {
     private async fileChanged(eventname: 'change' | 'rename', filename: string) {
         // Ignore events when we are editing the file.
         if (this.paused === true) return;
-        if (filename.toLowerCase() !== 'mods.txt') return;
+        if (filename?.toLowerCase() !== 'mods.txt') return;
         return refreshLuaMods(this.API);
     }
 }

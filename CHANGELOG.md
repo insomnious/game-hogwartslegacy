@@ -14,6 +14,14 @@ To be announced
 
 ### Fixed
 
+## [0.3.2] - 2023-03-28
+
+Bug fix
+
+### Fixed
+
+- Fixed bug where Lua file change event was being raised with null data 
+
 ## [0.3.1] - 2023-03-23
 
 Bug fixes

@@ -28,15 +28,15 @@ async function TestForPakModType(
   if (!pakInstallInstructions.length) return false;
 
   // Exclude criteria. Ignore LUA scripts, or logic mods.
-  const excludeInstructions = copyInstructions.find(
+  const excludeInstructions: types.IInstruction | undefined = copyInstructions.find(
     (i) =>
       i.source?.toLowerCase().endsWith(".lua") ||
       i.source?.toLowerCase().endsWith("ue4sslogicmod.info") ||
       i.source?.toLowerCase().endsWith(".ue4sslogicmod") ||
       i.source?.toLowerCase().endsWith(".logicmod"),
   );
-  // // console.log('Pak mod?', !!excludeInstructions ? false : true);
-  return !excludeInstructions ? false : true;
+  // If excludeInstructions found an excludable file, return false otherwise true. 
+  return excludeInstructions !== undefined ? false : true;
 }
 
 function MergeMods(mod: types.IMod, context: types.IExtensionContext): string {

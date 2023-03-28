@@ -67,7 +67,7 @@ async function install(files: string[]): Promise<types.IInstallResult> {
             return {
                 type: 'copy',
                 source: f,
-                destination: path.join(LUAInstallPath, f, endOfPath)
+                destination: path.join(LUAInstallPath, cur, endOfPath)
             }
         });
 
@@ -78,8 +78,11 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     instructions = [...luaInstallableFiles, ...instructions];
     
     // Extract the unused files too, just for completeness
-    const unusedInstructions = filesCleaned.filter(f => !instructions.find(i => i.source.toLowerCase() === f.toLowerCase()));
-    if (unusedInstructions.length) instructions = [...instructions, ...unusedInstructions.map(i => ({ type: 'copy', source: i, desination: i }))];
+    const unusedInstructions = (filesCleaned.filter(f => !instructions.find(i => i.source.toLowerCase() === f.toLowerCase()) || [])
+        .map(i => ({ type: 'copy', source: i, desination: i })));
+    if (unusedInstructions.length) instructions = [...instructions, ...unusedInstructions];
+
+    console.log(instructions)
 
     return { instructions };
 }

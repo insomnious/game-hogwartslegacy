@@ -173,12 +173,12 @@ function main(context: types.IExtensionContext) {
     (files) => HogwartsMovieInstaller.install(files, context),
   );
   
-  // context.registerInstaller(
-  //   "hogwarts-installer-bp-lua", 
-  //   90, 
-  //   HogwartsBluePrintOrLuaInstaller.test, 
-  //   HogwartsBluePrintOrLuaInstaller.install
-  // );
+  context.registerInstaller(
+    "hogwarts-installer-bp-lua", 
+    90, 
+    HogwartsBluePrintOrLuaInstaller.test, 
+    HogwartsBluePrintOrLuaInstaller.install
+  );
 
   context.registerMerge(
     (game) => HogwartsMovieMerger.test(context, game),

@@ -14,6 +14,14 @@ To be announced
 
 ### Fixed
 
+## [0.3.3] - 2023-03-28
+
+Bug fix
+
+### Fixed
+
+- Fixed bug where PAK mods weren't correctly being identified
+
 ## [0.3.2] - 2023-03-28
 
 Bug fix

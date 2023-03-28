@@ -72,6 +72,14 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.3] - 2023-03-28
+
+Bug fix
+
+### Fixed
+
+- Fixed bug where PAK mods weren't correctly being identified
+
 ## [0.3.2] - 2023-03-28
 
 Bug fix

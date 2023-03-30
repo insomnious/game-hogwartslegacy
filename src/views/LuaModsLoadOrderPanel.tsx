@@ -30,7 +30,7 @@ function LogicModsLoadOrderPanel() {
     }
     
     return (
-        <div>
+        <div style={{overflow: 'auto', height: '100%'}}>
             {Object.keys(luaMods).map((folderName: string) => <LogicModsLoadOrderEntry folderName={folderName} />)}
         </div>
     );

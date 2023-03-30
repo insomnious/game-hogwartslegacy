@@ -49,7 +49,7 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     const luaFolders = luaFiles.map(f => {
         const splitPath = f.toLowerCase().split(path.sep);
         const folderIndex: number = splitPath.indexOf('scripts') - 1;
-        if (folderIndex !== -1) {
+        if (folderIndex !== -2) {
             const folderNameLowercased = splitPath[folderIndex];
             const folderPos = f.toLowerCase().indexOf(folderNameLowercased)
             return f.substring(folderPos, folderPos+folderNameLowercased.length);
@@ -78,11 +78,12 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     instructions = [...luaInstallableFiles, ...instructions];
     
     // Extract the unused files too, just for completeness
-    const unusedInstructions = (filesCleaned.filter(f => !instructions.find(i => i.source.toLowerCase() === f.toLowerCase()) || [])
-        .map(i => ({ type: 'copy', source: i, desination: i })));
+    const instructionSources = instructions.map(i => i.source.toLowerCase());
+    const unusedInstructions = (filesCleaned.filter(f => !instructionSources.includes(f.toLowerCase())) || [])
+        .map(i => ({ type: 'copy', source: i, desination: i }));
     if (unusedInstructions.length) instructions = [...instructions, ...unusedInstructions];
 
-    console.log(instructions)
+    console.log({unusedInstructions, filesCleaned})
 
     return { instructions };
 }

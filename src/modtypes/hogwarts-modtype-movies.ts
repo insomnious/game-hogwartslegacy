@@ -5,7 +5,7 @@ import { GAME_ID, MOVIESMOD_PATH } from '../common';
 const HogwartsMoviesModType = {
     isSupported: (gameId: string) => gameId === GAME_ID,
     getPath: GetMoviesModTypeRootPath,
-    test: () => false,
+    test,
     options: { mergeMods: true, name: "Movie Replacer" }
 }
 
@@ -21,6 +21,8 @@ function GetMoviesModTypeRootPath(
   if (gamePath != undefined) return path.join(gamePath, MOVIESMOD_PATH);
   else return undefined;
 }
+
+async function test(): Promise<boolean> { return false };
 
 
 

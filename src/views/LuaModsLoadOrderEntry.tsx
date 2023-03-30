@@ -29,12 +29,12 @@ function LuaModsLoadOrderEntry(props: IProps) {
     const setStatus = (enabled: boolean) => dispatch(setLuaModStatus(profile.id, folderName, enabled));
 
     return (
-    <div style={{fontSize: 'large'}}>
+    <div style={{fontSize: 'large'}} className='luamod-entry'>
         <Toggle 
             checked={entry.enabled}
             onToggle={(e) => setStatus(e.valueOf())}
         >
-            {folderName}
+            <span title={folderName}>{folderName}</span>
         </Toggle>
     </div>
     );

@@ -250,6 +250,8 @@ function main(context: types.IExtensionContext) {
       refreshLuaMods(context.api);
     });
 
+    context.api.setStylesheet('hogwarts-styles', path.join(__dirname, 'custom-styles.scss'));
+
     // When the loadorder changes, update the manifest on disk.
     context.api.onStateChange(['session', 'lualoadorder'], (previous, current) => {
       // Get game and profile info.

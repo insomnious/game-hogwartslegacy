@@ -79,11 +79,9 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     
     // Extract the unused files too, just for completeness
     const instructionSources = instructions.map(i => i.source.toLowerCase());
-    const unusedInstructions = (filesCleaned.filter(f => !instructionSources.includes(f.toLowerCase())) || [])
-        .map(i => ({ type: 'copy', source: i, desination: i }));
+    const unusedInstructions: types.IInstruction[] = (filesCleaned.filter(f => !instructionSources.includes(f.toLowerCase())) || [])
+        .map(i => ({ type: 'copy', source: i, destination: i }));
     if (unusedInstructions.length) instructions = [...instructions, ...unusedInstructions];
-
-    console.log({unusedInstructions, filesCleaned})
 
     return { instructions };
 }

@@ -114,7 +114,8 @@ export async function openLuaModsFolder(api: types.IExtensionApi) {
 
 export async function refreshLuaMods(api: types.IExtensionApi) {
     const state = api.getState();
-    const profile = selectors.activeProfile(api.getState());
+    const profile: types.IProfile | undefined = selectors.activeProfile(api.getState());
+    if (!profile) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stateLoadOrder = (state.session as any).lualoadorder?.[profile.id] || [];
     const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;

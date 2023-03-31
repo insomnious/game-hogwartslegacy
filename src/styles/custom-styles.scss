@@ -1,0 +1,8 @@
+.luamod-entry {
+    & .toggle-container {
+        & .toggle-children {
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+}

@@ -173,12 +173,12 @@ function main(context: types.IExtensionContext) {
     (files) => HogwartsMovieInstaller.install(files, context),
   );
   
-  // context.registerInstaller(
-  //   "hogwarts-installer-bp-lua", 
-  //   90, 
-  //   HogwartsBluePrintOrLuaInstaller.test, 
-  //   HogwartsBluePrintOrLuaInstaller.install
-  // );
+  context.registerInstaller(
+    "hogwarts-installer-bp-lua", 
+    90, 
+    HogwartsBluePrintOrLuaInstaller.test, 
+    HogwartsBluePrintOrLuaInstaller.install
+  );
 
   context.registerMerge(
     (game) => HogwartsMovieMerger.test(context, game),
@@ -220,7 +220,8 @@ function main(context: types.IExtensionContext) {
       try {
         util.opn(saveGameFolderPath);
       } catch (error) {
-        console.warn(`${error}`);
+        log('warn', 'Error opening Hogwarts Legacy save folder', error)
+        // console.warn(`${error}`);
         return;
       }      
     },
@@ -249,6 +250,8 @@ function main(context: types.IExtensionContext) {
       // When the actual profile change happens
       refreshLuaMods(context.api);
     });
+
+    context.api.setStylesheet('hogwarts-styles', path.join(__dirname, 'custom-styles.scss'));
 
     // When the loadorder changes, update the manifest on disk.
     context.api.onStateChange(['session', 'lualoadorder'], (previous, current) => {
@@ -325,7 +328,8 @@ async function DeserializeLoadOrder(
     try {
       data = JSON.parse(fileData);
     } catch (error) {
-      console.error(error);
+      log('error', 'Error decoding saved JSON for Hogwarts Legacy load order', error)
+      // console.error(error);
     }
   } catch (error) {
     // file doesn't exist

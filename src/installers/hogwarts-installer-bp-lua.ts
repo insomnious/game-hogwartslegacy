@@ -31,12 +31,12 @@ async function test(files: string[], gameId: string): Promise<types.ISupportedRe
 }
 
 async function install(files: string[]): Promise<types.IInstallResult> {
-    let instructions = [];
+    let instructions: types.IInstruction[] = [];
     // Remove directories
     const filesCleaned = files.filter(f => !!path.extname(f));
     // Check for Blueprints and map them to the right folder. (PAK/UCAS/UTOC)
     const pakFiles = filesCleaned.filter(f => PAK_EXTENSIONS.includes(path.extname(f).toLowerCase()));
-    const pakInstructions = pakFiles.map(p => ({
+    const pakInstructions: types.IInstruction[] = pakFiles.map(p => ({
         type: 'copy',
         source: p,
         destination: path.join(BlueprintInstallPath, path.basename(p))
@@ -49,7 +49,7 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     const luaFolders = luaFiles.map(f => {
         const splitPath = f.toLowerCase().split(path.sep);
         const folderIndex: number = splitPath.indexOf('scripts') - 1;
-        if (folderIndex !== -1) {
+        if (folderIndex !== -2) {
             const folderNameLowercased = splitPath[folderIndex];
             const folderPos = f.toLowerCase().indexOf(folderNameLowercased)
             return f.substring(folderPos, folderPos+folderNameLowercased.length);
@@ -67,7 +67,7 @@ async function install(files: string[]): Promise<types.IInstallResult> {
             return {
                 type: 'copy',
                 source: f,
-                destination: path.join(LUAInstallPath, f, endOfPath)
+                destination: path.join(LUAInstallPath, cur, endOfPath)
             }
         });
 
@@ -78,8 +78,10 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     instructions = [...luaInstallableFiles, ...instructions];
     
     // Extract the unused files too, just for completeness
-    const unusedInstructions = filesCleaned.filter(f => !instructions.find(i => i.source.toLowerCase() === f.toLowerCase()));
-    if (unusedInstructions.length) instructions = [...instructions, ...unusedInstructions.map(i => ({ type: 'copy', source: i, desination: i }))];
+    const instructionSources = instructions.map(i => i.source.toLowerCase());
+    const unusedInstructions: types.IInstruction[] = (filesCleaned.filter(f => !instructionSources.includes(f.toLowerCase())) || [])
+        .map(i => ({ type: 'copy', source: i, destination: i }));
+    if (unusedInstructions.length) instructions = [...instructions, ...unusedInstructions];
 
     return { instructions };
 }

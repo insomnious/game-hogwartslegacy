@@ -31,12 +31,12 @@ async function test(files: string[], gameId: string): Promise<types.ISupportedRe
 }
 
 async function install(files: string[]): Promise<types.IInstallResult> {
-    let instructions = [];
+    let instructions: types.IInstruction[] = [];
     // Remove directories
     const filesCleaned = files.filter(f => !!path.extname(f));
     // Check for Blueprints and map them to the right folder. (PAK/UCAS/UTOC)
     const pakFiles = filesCleaned.filter(f => PAK_EXTENSIONS.includes(path.extname(f).toLowerCase()));
-    const pakInstructions = pakFiles.map(p => ({
+    const pakInstructions: types.IInstruction[] = pakFiles.map(p => ({
         type: 'copy',
         source: p,
         destination: path.join(BlueprintInstallPath, path.basename(p))

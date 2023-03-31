@@ -14,6 +14,22 @@ To be announced
 
 ### Fixed
 
+## [0.3.3] - 2023-03-31
+
+New installers and bug fixes
+
+### Added
+- Added an installer for UE4SS Blueprints that need to be installed to LogicMods.
+- Added an installer for Lua mods
+
+### Changed
+- Made the Lua mods list scrollable.
+
+### Fixed
+- Fixed a bug refreshing the Lua mods load order when there is no active profile in Vortex
+- Fixed a layout bug for Lua mods with exceedingly long names
+
+
 ## [0.3.2] - 2023-03-28
 
 Bug fix

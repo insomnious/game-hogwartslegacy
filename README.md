@@ -6,8 +6,9 @@ This is an extension for [Vortex](https://www.nexusmods.com/about/vortex/) to ad
 
 - Support for PAK-based mods
 - Support for BK2-based mods (movie files)
-- Support for UE4SS\Lua mods (experimental) 
-- Support for load order
+- Support for UE4SS Blueprint\Lua mods
+- Support for load order of PAK mods
+- Support for Lua mods enabling and disabling
 - Automatic game detection
 <!-- - Installation of archives which include more than one mod.
 - Automatic detection of ModBuddy (the XCOM 2 modding toolkit).
@@ -71,6 +72,21 @@ The load order section will also detect mods installed from the Steam Workshop a
 # Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.3.3] - 2023-03-31
+
+New installers and bug fixes
+
+### Added
+- Added an installer for UE4SS Blueprints that need to be installed to LogicMods.
+- Added an installer for Lua mods
+
+### Changed
+- Made the Lua mods list scrollable.
+
+### Fixed
+- Fixed a bug refreshing the Lua mods load order when there is no active profile in Vortex
+- Fixed a layout bug for Lua mods with exceedingly long names
 
 ## [0.3.2] - 2023-03-28
 

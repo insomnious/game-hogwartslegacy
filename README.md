@@ -65,6 +65,7 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 <!--- [Source Code (GitHub)](https://github.com/insomnious/game-halothemasterchiefcollection)-->
 
+- [Download the Extension (Nexus Mods)](https://www.nexusmods.com/site/mods/520)
 - [Mods for Hogwarts Legacy (Nexus Mods)](https://www.nexusmods.com/hogwartslegacy)
 - [Download Vortex (Nexus Mods)](https://www.nexusmods.com/about/vortex/)
 - [Vortex Knowledge Base (Nexus Mods)](https://wiki.nexusmods.com/index.php/Category:Vortex)

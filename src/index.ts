@@ -220,7 +220,8 @@ function main(context: types.IExtensionContext) {
       try {
         util.opn(saveGameFolderPath);
       } catch (error) {
-        console.warn(`${error}`);
+        log('warn', 'Error opening Hogwarts Legacy save folder', error)
+        // console.warn(`${error}`);
         return;
       }      
     },
@@ -327,7 +328,8 @@ async function DeserializeLoadOrder(
     try {
       data = JSON.parse(fileData);
     } catch (error) {
-      console.error(error);
+      log('error', 'Error decoding saved JSON for Hogwarts Legacy load order', error)
+      // console.error(error);
     }
   } catch (error) {
     // file doesn't exist

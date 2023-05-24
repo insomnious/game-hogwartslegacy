@@ -14,6 +14,11 @@ To be announced
 
 ### Fixed
 
+## [0.3.5] - 2023-05-24
+
+### Changed
+- Stop processing Lua mods if the game isn't installed (or the active profile isn't for Hogwarts Legacy)
+
 ## [0.3.4] - 2023-03-31
 
 New installers and bug fixes

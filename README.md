@@ -74,6 +74,11 @@ The load order section will also detect mods installed from the Steam Workshop a
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.5] - 2023-05-24
+
+### Changed
+- Stop processing Lua mods if the game isn't installed (or the active profile isn't for Hogwarts Legacy)
+
 ## [0.3.4] - 2023-03-31
 
 New installers and bug fixes

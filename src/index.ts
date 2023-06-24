@@ -19,8 +19,9 @@ import { luaModReducer } from './reducers/luaReducer';
 
 // IDs for different stores and nexus
 import { 
-  EPIC_ID, STEAM_ID, GAME_ID, EXECUTABLE, MODSFOLDER_PATH, 
-  MOVIESMOD_PATH, IGNORE_CONFLICTS, IGNORE_DEPLOY, STOP_PATTERNS 
+  EPIC_ID, STEAM_ID, GAME_ID, GAME_NAME, EXECUTABLE, MODSFOLDER_PATH, 
+  MOVIESMOD_PATH, IGNORE_CONFLICTS, IGNORE_DEPLOY, STOP_PATTERNS,
+  UEPROJECTNAME, GAME_FOLDER_STEAM, GAME_FOLDER_EPIC
 } from './common';
 
 // Abstract away a lot of the code for specific features into their own classes.
@@ -34,7 +35,7 @@ let monitor: LuaModsMonitor;
 
 const LOADORDER_FILE = "loadOrder.json";
 const VERSION_PATH = path.join(
-  "Phoenix",
+  UEPROJECTNAME,
   "Content",
   "Data",
   "Version",
@@ -93,7 +94,7 @@ function main(context: types.IExtensionContext) {
   // register a whole game, basic metadata and folder paths
   context.registerGame({
     id: GAME_ID,
-    name: "Hogwarts Legacy",
+    name: GAME_NAME,
     mergeMods: true,
     getGameVersion: getGameVersion,
     queryPath: findGame,
@@ -209,7 +210,7 @@ function main(context: types.IExtensionContext) {
 
       // because of course epic is using a different folder name to Steam to store save game data in
       const gameFolderName: string =
-        discovery?.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
+        discovery?.store == "epic" ? GAME_FOLDER_EPIC : GAME_FOLDER_STEAM;
       const saveGameFolderPath: string = path.join(
         VortexUtils.GetLocalAppDataPath(),
         gameFolderName,
@@ -269,7 +270,7 @@ function main(context: types.IExtensionContext) {
       // Get the path to the Mods.txt file.
       const gamePath: string | undefined = state.settings.gameMode.discovered[GAME_ID]?.path || undefined;
       if (!gamePath) return;
-      const modsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods', 'Mods.txt');
+      const modsPath = path.join(gamePath, UEPROJECTNAME, 'Binaries', 'Win64', 'Mods', 'Mods.txt');
       // Stop monitoring the mods.txt file, write the new manifest, resume the monitor.
       monitor.pause();
       writeManifest(currLoadOrder, modsPath)
@@ -328,7 +329,7 @@ async function DeserializeLoadOrder(
     try {
       data = JSON.parse(fileData);
     } catch (error) {
-      log('error', 'Error decoding saved JSON for Hogwarts Legacy load order', error)
+      log('error', 'Error decoding saved JSON for ' + GAME_NAME + ' load order', error)
       // console.error(error);
     }
   } catch (error) {

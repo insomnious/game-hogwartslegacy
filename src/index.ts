@@ -221,7 +221,7 @@ function main(context: types.IExtensionContext) {
       try {
         util.opn(saveGameFolderPath);
       } catch (error) {
-        log('warn', 'Error opening Hogwarts Legacy save folder', error)
+        log('warn', 'Error opening ' + GAME_NAME + ' save folder', error)
         // console.warn(`${error}`);
         return;
       }      

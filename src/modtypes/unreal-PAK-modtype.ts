@@ -3,7 +3,7 @@ import * as path from 'path';
 import { GAME_ID, MODSFOLDER_PATH } from '../common';
 import { IProps } from '../types';
 
-const HogwartsPAKModType = {
+const UnrealPAKModType = {
     isSupported: (gameId: string) => gameId === GAME_ID,
     getPath: GetPakModsPath,
     test: TestForPakModType,
@@ -66,7 +66,7 @@ function MergeMods(mod: types.IMod, context: types.IExtensionContext): string {
 
   // check to see if this is a movies type, if so, we don't want an extra folder or a prefix added
   // so we return nothing and let our installer sort it out
-  if (mod.type == "hogwarts-modtype-movies") {
+  if (mod.type == "unreal-modtype-movies") {
     //return "ZZZZ-" + mod.id;
     //// console.log(mod);
     return "";
@@ -123,4 +123,4 @@ function GetVortexProperties(
   return { api, state, profile, mods, discovery };
 }
 
-export default HogwartsPAKModType;
+export default UnrealPAKModType;

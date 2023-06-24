@@ -1,11 +1,11 @@
 import { fs, types, selectors, util } from 'vortex-api';
 import * as path from 'path';
-import { GAME_ID, PAK_EXTENSIONS, MOVIES_EXTENSION } from '../common';
+import { GAME_ID, GAME_NAME, PAK_EXTENSIONS, MOVIES_EXTENSION } from '../common';
 
-const HogwartsMovieMerger = {
+const UnrealMovieMerger = {
     test: TestMerge,
     merge: DoMerge,
-    modtype: 'hogwarts-modtype-movies'
+    modtype: 'unreal-modtype-movies'
 }
 
 function TestMerge(
@@ -15,7 +15,7 @@ function TestMerge(
 ): types.IMergeFilter|undefined {
   if (game.id !== GAME_ID) {
     console.warn(
-      `HOGWARTS: TestMerge() ${game.id} isn't for this merge function.`,
+      `${GAME_NAME}: TestMerge() ${game.id} isn't for this merge function.`,
     );
     return undefined;
   }
@@ -104,7 +104,7 @@ async function DoMerge(
     await fs.linkAsync(filePath, prefixedTargetPath);
   } else {
     console.warn(
-      `HOGWARTS: DoMerge() ${path.extname(
+      `${GAME_NAME}: DoMerge() ${path.extname(
         filePath,
       )} is an unknown extension and no idea how that slipped through the net.`,
     );
@@ -125,4 +125,4 @@ function MakePrefixFromIndex(input: number): string {
   return util.pad(res as any, "A", 3);
 }
 
-export default HogwartsMovieMerger;
+export default UnrealMovieMerger;

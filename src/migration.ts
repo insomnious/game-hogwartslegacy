@@ -1,7 +1,7 @@
 import path from "path";
 import * as VortexUtils from "./VortexUtils";
 import { types, log, actions, fs, selectors, util } from "vortex-api";
-import { GAME_ID, MODSFOLDER_PATH } from './common';
+import { GAME_ID, GAME_NAME, MODSFOLDER_PATH } from './common';
 import semver from "semver";
 
 async function migrate0_2_11(context: types.IExtensionContext, oldversion: string) {
@@ -11,7 +11,7 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
   const mods = state.persistent.mods[GAME_ID] ?? {};
 
   if (!Object.keys(mods).length) {
-    log("info", "No mods to migrate for Hogwarts Legacy");
+    log("info", `No mods to migrate for ${GAME_NAME}`);
     return;
   }
 
@@ -23,7 +23,7 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
   try {
     const gamePath = state.settings.gameMode.discovered?.[GAME_ID]?.path;
     if (!gamePath) {
-      log("info", "No path save for Hogwarts Legacy, aborting migration");
+      log("info", `No path saved for ${GAME_NAME}, aborting migration`);
       return;
     }
     const modsFolder = path.join(gamePath, MODSFOLDER_PATH);
@@ -34,7 +34,7 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
       modsFolder,
     );
   } catch (err) {
-    log("error", "Failed to clean up ~mods folder for Hogwarts Legacy", err);
+    log("error", `Failed to clean up ~mods folder for ${GAME_NAME}`, err);
   }
 
   // Reset the load order by deleting the JSON file.
@@ -72,7 +72,7 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
 
       log("debug", `Changing mod type: ${mod.attributes.name}`);
       const dispatch = context.api.store?.dispatch;
-      dispatch(actions.setModType(GAME_ID, mod.id, "hogwarts-PAK-modtype"));
+      dispatch(actions.setModType(GAME_ID, mod.id, "unreal-PAK-modtype"));
     } catch (err) {
       log("error", `Error checking mod ${mod.id}`, err);
     }
@@ -90,7 +90,7 @@ export default async function Migrate(context: types.IExtensionContext, oldVersi
     try {
       await migrate0_2_11(context, oldVersion);
     } catch (err) {
-      log("error", "Failed to migrate Hogwarts Legacy to 0.2.11");
+      log("error", `Failed to migrate ${GAME_NAME} to 0.2.11`);
     }
   }
 
@@ -130,7 +130,7 @@ export default async function Migrate(context: types.IExtensionContext, oldVersi
   context.api.sendNotification({
     type: "info",
     message:
-      "The Hogwarts Legacy Extension has been updated. If you previously installed a mod modifying movie files (e.g. paintings) then there is a good chance that they haven't been working as those type of mods weren't officially supported. If this is the case then please reinstall those individual mods.",
+      `The ${GAME_NAME} Extension has been updated. If you previously installed a mod modifying movie files (e.g. paintings) then there is a good chance that they haven't been working as those type of mods weren't officially supported. If this is the case then please reinstall those individual mods.`,
   });
 
   return context.api

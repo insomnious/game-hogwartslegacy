@@ -1,14 +1,14 @@
 import { types } from 'vortex-api';
 import * as path from 'path';
 import { 
-    GAME_ID, IGNORE_CONFLICTS, PAK_EXTENSIONS  
+    GAME_ID, IGNORE_CONFLICTS, PAK_EXTENSIONS, UEPROJECTNAME
 } from '../common';
 
 const LUA_EXT = '.lua';
-const LUAInstallPath = path.join('Phoenix','Binaries','Win64','Mods'); // Phoenix\Binaries\Win64\Mods
-const BlueprintInstallPath = path.join('Phoenix','Content','PAKS','LogicMods');
+const LUAInstallPath = path.join(UEPROJECTNAME,'Binaries','Win64','Mods'); // Phoenix\Binaries\Win64\Mods
+const BlueprintInstallPath = path.join(UEPROJECTNAME,'Content','PAKS','LogicMods');
 
-const HogwartsBluePrintOrLuaInstaller = {
+const UnrealBluePrintOrLuaInstaller = {
     test,
     install,
 }
@@ -86,4 +86,4 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     return { instructions };
 }
 
-export default HogwartsBluePrintOrLuaInstaller;
+export default UnrealBluePrintOrLuaInstaller;

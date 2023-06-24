@@ -19,22 +19,23 @@ import { luaModReducer } from './reducers/luaReducer';
 
 // IDs for different stores and nexus
 import { 
-  EPIC_ID, STEAM_ID, GAME_ID, EXECUTABLE, MODSFOLDER_PATH, 
-  MOVIESMOD_PATH, IGNORE_CONFLICTS, IGNORE_DEPLOY, STOP_PATTERNS 
+  EPIC_ID, STEAM_ID, GAME_ID, GAME_NAME, EXECUTABLE, MODSFOLDER_PATH, 
+  MOVIESMOD_PATH, IGNORE_CONFLICTS, IGNORE_DEPLOY, STOP_PATTERNS,
+  UEPROJECTNAME, GAME_FOLDER_STEAM, GAME_FOLDER_EPIC
 } from './common';
 
 // Abstract away a lot of the code for specific features into their own classes.
-import HogwartsMovieInstaller from './installers/hogwarts-installer-movies';
-import HogwartsBluePrintOrLuaInstaller from './installers/hogwarts-installer-bp-lua';
-import HogwartsMovieModType from './modtypes/hogwarts-modtype-movies';
-import HogwartsPAKModType from './modtypes/hogwarts-PAK-modtype';
-import HogwartsMovieMerger from './merges/movies-merge';
+import UnrealMovieInstaller from './installers/unreal-installer-movies';
+import UnrealBluePrintOrLuaInstaller from './installers/unreal-installer-bp-lua';
+import UnrealMovieModType from './modtypes/unreal-modtype-movies';
+import UnrealPAKModType from './modtypes/unreal-PAK-modtype';
+import UnrealMovieMerger from './merges/movies-merge';
 
 let monitor: LuaModsMonitor;
 
 const LOADORDER_FILE = "loadOrder.json";
 const VERSION_PATH = path.join(
-  "Phoenix",
+  UEPROJECTNAME,
   "Content",
   "Data",
   "Version",
@@ -93,7 +94,7 @@ function main(context: types.IExtensionContext) {
   // register a whole game, basic metadata and folder paths
   context.registerGame({
     id: GAME_ID,
-    name: "Hogwarts Legacy",
+    name: GAME_NAME,
     mergeMods: true,
     getGameVersion: getGameVersion,
     queryPath: findGame,
@@ -149,41 +150,41 @@ function main(context: types.IExtensionContext) {
   context.registerMigration((oldVer) => Migrate(context, oldVer));
 
   context.registerModType(
-    "hogwarts-modtype-movies",
+    "unreal-modtype-movies",
     95,
-    HogwartsMovieModType.isSupported,
-    (game) => HogwartsMovieModType.getPath(context, game),
-    HogwartsMovieModType.test,
-    HogwartsMovieModType.options,
+    UnrealMovieModType.isSupported,
+    (game) => UnrealMovieModType.getPath(context, game),
+    UnrealMovieModType.test,
+    UnrealMovieModType.options,
   );
 
   context.registerModType(
-    "hogwarts-PAK-modtype",
+    "unreal-PAK-modtype",
     25,
-    HogwartsPAKModType.isSupported,
-    (game) => HogwartsPAKModType.getPath(context, game),
-    HogwartsPAKModType.test,
-    { mergeMods: (mod) => HogwartsPAKModType.options.mergeMods(mod, context), name: "PAK Mod" },
+    UnrealPAKModType.isSupported,
+    (game) => UnrealPAKModType.getPath(context, game),
+    UnrealPAKModType.test,
+    { mergeMods: (mod) => UnrealPAKModType.options.mergeMods(mod, context), name: "PAK Mod" },
   );
 
   context.registerInstaller(
-    "hogwarts-installer-movies",
+    "unreal-installer-movies",
     90,
-    HogwartsMovieInstaller.test,
-    (files) => HogwartsMovieInstaller.install(files, context),
+    UnrealMovieInstaller.test,
+    (files) => UnrealMovieInstaller.install(files, context),
   );
   
   context.registerInstaller(
-    "hogwarts-installer-bp-lua", 
+    "unreal-installer-bp-lua", 
     90, 
-    HogwartsBluePrintOrLuaInstaller.test, 
-    HogwartsBluePrintOrLuaInstaller.install
+    UnrealBluePrintOrLuaInstaller.test, 
+    UnrealBluePrintOrLuaInstaller.install
   );
 
   context.registerMerge(
-    (game) => HogwartsMovieMerger.test(context, game),
-    (filePath, mergePath) => HogwartsMovieMerger.merge(context, filePath, mergePath),
-    HogwartsMovieMerger.modtype,
+    (game) => UnrealMovieMerger.test(context, game),
+    (filePath, mergePath) => UnrealMovieMerger.merge(context, filePath, mergePath),
+    UnrealMovieMerger.modtype,
   );
 
   // 200 so it goes to bottom of menu list?
@@ -209,7 +210,7 @@ function main(context: types.IExtensionContext) {
 
       // because of course epic is using a different folder name to Steam to store save game data in
       const gameFolderName: string =
-        discovery?.store == "epic" ? "HogwartsLegacy" : "Hogwarts Legacy";
+        discovery?.store == "epic" ? GAME_FOLDER_EPIC : GAME_FOLDER_STEAM;
       const saveGameFolderPath: string = path.join(
         VortexUtils.GetLocalAppDataPath(),
         gameFolderName,
@@ -220,7 +221,7 @@ function main(context: types.IExtensionContext) {
       try {
         util.opn(saveGameFolderPath);
       } catch (error) {
-        log('warn', 'Error opening Hogwarts Legacy save folder', error)
+        log('warn', `Error opening ${GAME_NAME} save folder`, error)
         // console.warn(`${error}`);
         return;
       }      
@@ -251,7 +252,7 @@ function main(context: types.IExtensionContext) {
       refreshLuaMods(context.api);
     });
 
-    context.api.setStylesheet('hogwarts-styles', path.join(__dirname, 'custom-styles.scss'));
+    context.api.setStylesheet('unreal-styles', path.join(__dirname, 'custom-styles.scss'));
 
     // When the loadorder changes, update the manifest on disk.
     context.api.onStateChange(['session', 'lualoadorder'], (previous, current) => {
@@ -269,7 +270,7 @@ function main(context: types.IExtensionContext) {
       // Get the path to the Mods.txt file.
       const gamePath: string | undefined = state.settings.gameMode.discovered[GAME_ID]?.path || undefined;
       if (!gamePath) return;
-      const modsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods', 'Mods.txt');
+      const modsPath = path.join(gamePath, UEPROJECTNAME, 'Binaries', 'Win64', 'Mods', 'Mods.txt');
       // Stop monitoring the mods.txt file, write the new manifest, resume the monitor.
       monitor.pause();
       writeManifest(currLoadOrder, modsPath)
@@ -328,7 +329,7 @@ async function DeserializeLoadOrder(
     try {
       data = JSON.parse(fileData);
     } catch (error) {
-      log('error', 'Error decoding saved JSON for Hogwarts Legacy load order', error)
+      log('error', `Error decoding saved JSON for ${GAME_NAME} load order`, error)
       // console.error(error);
     }
   } catch (error) {
@@ -343,12 +344,12 @@ async function DeserializeLoadOrder(
   // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
   const newMods = enabledModIds.filter(
     (id) =>
-      ["hogwarts-PAK-modtype", "hogwarts-modtype-movies"].includes(
+      ["unreal-PAK-modtype", "unreal-modtype-movies"].includes(
         mods[id]?.type,
       ) && filteredData.find((loEntry) => loEntry.id === id) === undefined,
   );
 
-  // removed mods[id]?.type != "hogwarts-modtype-movies"
+  // removed mods[id]?.type != "unreal-modtype-movies"
 
   // Add any newly added mods to the bottom of the loadOrder.
   newMods.forEach((newMod) => {

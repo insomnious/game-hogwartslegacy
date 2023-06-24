@@ -72,7 +72,7 @@ async function migrate0_2_11(context: types.IExtensionContext, oldversion: strin
 
       log("debug", `Changing mod type: ${mod.attributes.name}`);
       const dispatch = context.api.store?.dispatch;
-      dispatch(actions.setModType(GAME_ID, mod.id, "hogwarts-PAK-modtype"));
+      dispatch(actions.setModType(GAME_ID, mod.id, "unreal-PAK-modtype"));
     } catch (err) {
       log("error", `Error checking mod ${mod.id}`, err);
     }

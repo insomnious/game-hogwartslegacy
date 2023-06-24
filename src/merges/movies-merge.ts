@@ -2,10 +2,10 @@ import { fs, types, selectors, util } from 'vortex-api';
 import * as path from 'path';
 import { GAME_ID, PAK_EXTENSIONS, MOVIES_EXTENSION } from '../common';
 
-const HogwartsMovieMerger = {
+const UnrealMovieMerger = {
     test: TestMerge,
     merge: DoMerge,
-    modtype: 'hogwarts-modtype-movies'
+    modtype: 'unreal-modtype-movies'
 }
 
 function TestMerge(
@@ -125,4 +125,4 @@ function MakePrefixFromIndex(input: number): string {
   return util.pad(res as any, "A", 3);
 }
 
-export default HogwartsMovieMerger;
+export default UnrealMovieMerger;

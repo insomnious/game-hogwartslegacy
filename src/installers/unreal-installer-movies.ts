@@ -4,7 +4,7 @@ import {
     GAME_ID, MOVIESMOD_PATH, MOVIES_EXTENSION, PAK_EXTENSIONS 
 } from '../common';
 
-const HogwartsMovieInstaller = {
+const UnrealMovieInstaller = {
     test: TestForMoviesMod,
     install: InstallMoviesMod,
 }
@@ -98,7 +98,7 @@ async function InstallMoviesMod(files: string[], context: types.IExtensionContex
   const instructions: types.IInstruction[] = [];
 
   // adds instruction to set a different mod type
-  instructions.push({ type: "setmodtype", value: "hogwarts-modtype-movies" });
+  instructions.push({ type: "setmodtype", value: "unreal-modtype-movies" });
 
   // loop through and find matching movies to replace
   for (const movieFile of movies) {
@@ -201,4 +201,4 @@ async function GetFilesInFolder(
 
 
 
-export default HogwartsMovieInstaller;
+export default UnrealMovieInstaller;

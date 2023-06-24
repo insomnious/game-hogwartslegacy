@@ -25,11 +25,11 @@ import {
 } from './common';
 
 // Abstract away a lot of the code for specific features into their own classes.
-import HogwartsMovieInstaller from './installers/hogwarts-installer-movies';
-import HogwartsBluePrintOrLuaInstaller from './installers/hogwarts-installer-bp-lua';
-import HogwartsMovieModType from './modtypes/hogwarts-modtype-movies';
-import HogwartsPAKModType from './modtypes/hogwarts-PAK-modtype';
-import HogwartsMovieMerger from './merges/movies-merge';
+import UnrealMovieInstaller from './installers/unreal-installer-movies';
+import UnrealBluePrintOrLuaInstaller from './installers/unreal-installer-bp-lua';
+import UnrealMovieModType from './modtypes/unreal-modtype-movies';
+import UnrealPAKModType from './modtypes/unreal-PAK-modtype';
+import UnrealMovieMerger from './merges/movies-merge';
 
 let monitor: LuaModsMonitor;
 
@@ -150,41 +150,41 @@ function main(context: types.IExtensionContext) {
   context.registerMigration((oldVer) => Migrate(context, oldVer));
 
   context.registerModType(
-    "hogwarts-modtype-movies",
+    "unreal-modtype-movies",
     95,
-    HogwartsMovieModType.isSupported,
-    (game) => HogwartsMovieModType.getPath(context, game),
-    HogwartsMovieModType.test,
-    HogwartsMovieModType.options,
+    UnrealMovieModType.isSupported,
+    (game) => UnrealMovieModType.getPath(context, game),
+    UnrealMovieModType.test,
+    UnrealMovieModType.options,
   );
 
   context.registerModType(
-    "hogwarts-PAK-modtype",
+    "unreal-PAK-modtype",
     25,
-    HogwartsPAKModType.isSupported,
-    (game) => HogwartsPAKModType.getPath(context, game),
-    HogwartsPAKModType.test,
-    { mergeMods: (mod) => HogwartsPAKModType.options.mergeMods(mod, context), name: "PAK Mod" },
+    UnrealPAKModType.isSupported,
+    (game) => UnrealPAKModType.getPath(context, game),
+    UnrealPAKModType.test,
+    { mergeMods: (mod) => UnrealPAKModType.options.mergeMods(mod, context), name: "PAK Mod" },
   );
 
   context.registerInstaller(
-    "hogwarts-installer-movies",
+    "unreal-installer-movies",
     90,
-    HogwartsMovieInstaller.test,
-    (files) => HogwartsMovieInstaller.install(files, context),
+    UnrealMovieInstaller.test,
+    (files) => UnrealMovieInstaller.install(files, context),
   );
   
   context.registerInstaller(
-    "hogwarts-installer-bp-lua", 
+    "unreal-installer-bp-lua", 
     90, 
-    HogwartsBluePrintOrLuaInstaller.test, 
-    HogwartsBluePrintOrLuaInstaller.install
+    UnrealBluePrintOrLuaInstaller.test, 
+    UnrealBluePrintOrLuaInstaller.install
   );
 
   context.registerMerge(
-    (game) => HogwartsMovieMerger.test(context, game),
-    (filePath, mergePath) => HogwartsMovieMerger.merge(context, filePath, mergePath),
-    HogwartsMovieMerger.modtype,
+    (game) => UnrealMovieMerger.test(context, game),
+    (filePath, mergePath) => UnrealMovieMerger.merge(context, filePath, mergePath),
+    UnrealMovieMerger.modtype,
   );
 
   // 200 so it goes to bottom of menu list?
@@ -252,7 +252,7 @@ function main(context: types.IExtensionContext) {
       refreshLuaMods(context.api);
     });
 
-    context.api.setStylesheet('hogwarts-styles', path.join(__dirname, 'custom-styles.scss'));
+    context.api.setStylesheet('unreal-styles', path.join(__dirname, 'custom-styles.scss'));
 
     // When the loadorder changes, update the manifest on disk.
     context.api.onStateChange(['session', 'lualoadorder'], (previous, current) => {
@@ -344,12 +344,12 @@ async function DeserializeLoadOrder(
   // Check if the user added any new mods, and only add things that aren't in collections and aren't movies types
   const newMods = enabledModIds.filter(
     (id) =>
-      ["hogwarts-PAK-modtype", "hogwarts-modtype-movies"].includes(
+      ["unreal-PAK-modtype", "unreal-modtype-movies"].includes(
         mods[id]?.type,
       ) && filteredData.find((loEntry) => loEntry.id === id) === undefined,
   );
 
-  // removed mods[id]?.type != "hogwarts-modtype-movies"
+  // removed mods[id]?.type != "unreal-modtype-movies"
 
   // Add any newly added mods to the bottom of the loadOrder.
   newMods.forEach((newMod) => {

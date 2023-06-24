@@ -8,7 +8,7 @@ const LUA_EXT = '.lua';
 const LUAInstallPath = path.join('Phoenix','Binaries','Win64','Mods'); // Phoenix\Binaries\Win64\Mods
 const BlueprintInstallPath = path.join('Phoenix','Content','PAKS','LogicMods');
 
-const HogwartsBluePrintOrLuaInstaller = {
+const UnrealBluePrintOrLuaInstaller = {
     test,
     install,
 }
@@ -86,4 +86,4 @@ async function install(files: string[]): Promise<types.IInstallResult> {
     return { instructions };
 }
 
-export default HogwartsBluePrintOrLuaInstaller;
+export default UnrealBluePrintOrLuaInstaller;

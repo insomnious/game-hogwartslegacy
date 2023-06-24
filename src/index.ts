@@ -221,7 +221,7 @@ function main(context: types.IExtensionContext) {
       try {
         util.opn(saveGameFolderPath);
       } catch (error) {
-        log('warn', 'Error opening ' + GAME_NAME + ' save folder', error)
+        log('warn', `Error opening ${GAME_NAME} save folder`, error)
         // console.warn(`${error}`);
         return;
       }      
@@ -329,7 +329,7 @@ async function DeserializeLoadOrder(
     try {
       data = JSON.parse(fileData);
     } catch (error) {
-      log('error', 'Error decoding saved JSON for ' + GAME_NAME + ' load order', error)
+      log('error', `Error decoding saved JSON for ${GAME_NAME} load order`, error)
       // console.error(error);
     }
   } catch (error) {

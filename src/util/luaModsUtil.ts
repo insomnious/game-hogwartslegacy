@@ -1,7 +1,7 @@
 import path from 'path';
 import { fs, log, util, types, selectors } from 'vortex-api';
 import * as actions from '../actions/luaActions';
-import { GAME_ID } from '../common';
+import { GAME_ID, GAME_NAME, UEPROJECTNAME } from '../common';
 
 interface ILuaMod {
     folderName: string;
@@ -34,9 +34,9 @@ export class LuaModsMonitor {
         // Get the logic mods path.
         log('debug', 'Lua mods watcher starting')
         const state = this.API.getState();
-        const discoveryPath = state.settings.gameMode.discovered['hogwartslegacy']?.path ?? undefined;
-        if (!discoveryPath) throw new Error('Hogwarts Legacy is not discovered!');
-        const luaModsPath = path.join(discoveryPath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
+        const discoveryPath = state.settings.gameMode.discovered[GAME_ID]?.path ?? undefined;
+        if (!discoveryPath) throw new Error(`${GAME_NAME} is not discovered!`);
+        const luaModsPath = path.join(discoveryPath, UEPROJECTNAME, 'Binaries', 'Win64', 'Mods');
 
         // Check it exists
         try {
@@ -102,9 +102,9 @@ export class LuaModsMonitor {
 
 export async function openLuaModsFolder(api: types.IExtensionApi) {
     const state = api.getState();
-    const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;
-    if (!gamePath) return api.showErrorNotification('Could not open Lua Mods Folder', 'Hogwarts Legacy is not properly installed');
-    const luaModsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
+    const gamePath: string | undefined = state.settings.gameMode.discovered[GAME_ID]?.path || undefined;
+    if (!gamePath) return api.showErrorNotification('Could not open Lua Mods Folder', `${GAME_NAME} is not properly installed`);
+    const luaModsPath = path.join(gamePath, UEPROJECTNAME, 'Binaries', 'Win64', 'Mods');
     try {
         util.opn(luaModsPath);
     }
@@ -119,13 +119,13 @@ export async function refreshLuaMods(api: types.IExtensionApi) {
     if (!profile|| profile.gameId !== GAME_ID) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stateLoadOrder = (state.session as any).lualoadorder?.[profile.id] || [];
-    const gamePath: string | undefined = state.settings.gameMode.discovered['hogwartslegacy']?.path || undefined;
+    const gamePath: string | undefined = state.settings.gameMode.discovered[GAME_ID]?.path || undefined;
     if (!gamePath) {
         log('error', 'Error getting game path');
-        api.showErrorNotification('Could not refresh logic mods', 'Unable to locate Hogwarts Legacy install folder.');
+        api.showErrorNotification('Could not refresh logic mods', `Unable to locate ${GAME_NAME} install folder.`);
         return;
     }
-    const luaModsPath = path.join(gamePath, 'Phoenix', 'Binaries', 'Win64', 'Mods');
+    const luaModsPath = path.join(gamePath, UEPROJECTNAME, 'Binaries', 'Win64', 'Mods');
     // Get a list of folders.
     let folderList = [];
     try {

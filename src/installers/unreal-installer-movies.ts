@@ -1,7 +1,7 @@
 import { fs, types } from 'vortex-api';
 import * as path from 'path';
 import { 
-    GAME_ID, MOVIESMOD_PATH, MOVIES_EXTENSION, PAK_EXTENSIONS 
+    GAME_ID, GAME_NAME, MOVIESMOD_PATH, MOVIES_EXTENSION, PAK_EXTENSIONS 
 } from '../common';
 
 const UnrealMovieInstaller = {
@@ -110,7 +110,7 @@ async function InstallMoviesMod(files: string[], context: types.IExtensionContex
     );
 
     // console.log(
-    //   `HOGWARTS: InstallMoviesMod() Looking for ${path
+    //   `${GAME_NAME}: InstallMoviesMod() Looking for ${path
     //     .basename(movieFile)
     //     .toLowerCase()}... foundFile=${foundFile}`,
     // );
@@ -124,7 +124,7 @@ async function InstallMoviesMod(files: string[], context: types.IExtensionContex
       });
     } else {
       console.warn(
-        `HOGWARTS: InstallMoviesMod() ${path
+        `${GAME_NAME}: InstallMoviesMod() ${path
           .basename(movieFile)
           .toLowerCase()} not found.`,
       );
